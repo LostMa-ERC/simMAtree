@@ -12,8 +12,8 @@ from src.visualisation import plot_posterior_predictive_stats, plot_inference_ch
 HYPERPARAMS = {
     "n_init" : 1,
     "Nact" : 1000,
-    "Ninact" : 1000,
-    "max_pop" : 10000
+    "Ninact" : 500,
+    "max_pop" : 100000
 }
 
 def main():
