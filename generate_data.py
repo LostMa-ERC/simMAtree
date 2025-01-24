@@ -4,7 +4,7 @@ import json
 
 from src.yule import generate_yule_dataset
 from src.stats import compute_stat_witness, inverse_compute_stat_witness
-from main import HYPERPARAMS
+from run_yule import HYPERPARAMS
 
 
 sys.setrecursionlimit(20000)

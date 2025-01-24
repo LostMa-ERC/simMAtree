@@ -10,9 +10,9 @@ from src.yule import simulate_tree_stats
 from src.visualisation import plot_posterior_predictive_stats, plot_inference_checks
 
 HYPERPARAMS = {
-    "n_init" : 1,
+    "n_init" : 6000,
     "Nact" : 1000,
-    "Ninact" : 500,
+    "Ninact" : 1000,
     "max_pop" : 100000
 }
 

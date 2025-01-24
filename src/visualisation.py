@@ -15,11 +15,11 @@ def plot_posterior_predictive_stats(samples, true_values, output_dir):
     axes = axes.ravel()
     
     metric_names = [
-        "Nombre de témoins",
-        "Nombre d'œuvres",
-        "Maximum de témoins par œuvre",
-        "Médiane de témoins par œuvre",
-        "Nombre d'œuvres avec un témoin"
+        "Number of witnesses",
+        "Number of works",
+        "Max. number of witnesses per work",
+        "Med. number of witnesses per work",
+        "Number of witnesses with one work"
     ]
     
     colors = sns.color_palette("husl", 5)
