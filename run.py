@@ -1,10 +1,9 @@
 import pandas as pd
-import numpy as np
 import argparse
 import json
 
+from importlib import import_module
 from utils.stats import compute_stat_witness, inverse_compute_stat_witness
-from models.yule_model import YuleModel
 from inference.pymc_backend import PymcBackend
 
 
@@ -16,28 +15,31 @@ def run(data_path, model_config, inference_config, results_dir):
     data = compute_stat_witness(list(witness_counts))
     
     with open(model_config) as f:
-        config_param = json.load(f)
+        model_param = json.load(f)
 
     with open(inference_config) as f:
         inference_param = json.load(f)
 
-    if config_param["type"] == "yule":
-        model = YuleModel(model_config)
-    else:
-        raise ValueError(f"Unknown model type")
+
+    Model_module = import_module(model_param["module_name"])
+    Model_class = getattr(Model_module, model_param["class_name"])
+    try:
+        model = Model_class(model_config)
+    except:
+        print("Unknown model type")
     
-    if inference_param["backend"] == "pymc":
-        backend = PymcBackend(inference_config)
-    elif inference_param["backend"] == "sbi":
-        pass
-    else:
-        raise ValueError(f"Unknown backend type")
+    Inference_module = import_module(inference_param["module_name"])
+    Inference_class = getattr(Inference_module, inference_param["class_name"])
+    try:
+        backend = Inference_class(inference_config)
+    except:
+        print("Unknown backend type")
     
     results = backend.run_inference(model, data)
     
     # Sauvegarde et visualisation
-    backend.save_results(data, results_dir)
-    # backend.plot_results(results, data, results_dir)
+    obs_values = inverse_compute_stat_witness(data)
+    backend.save_results(obs_values, results_dir)
 
 def main():
     parser = argparse.ArgumentParser(description='Exécuter l\'inférence sur les données')

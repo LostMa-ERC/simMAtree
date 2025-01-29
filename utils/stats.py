@@ -26,7 +26,7 @@ def inverse_compute_stat_witness(stats):
     """Inverse les statistiques pour retrouver les valeurs d'origine"""
     if np.sum(stats) == 0:
         return np.zeros(5)
-    
+
     nb_temoins = int(stats[0]*1e6)
     nb_oeuvre = int(stats[1]*1e6)
     max_wit = int(stats[3]*stats[0]*1e6)

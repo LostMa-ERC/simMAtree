@@ -1,5 +1,6 @@
 {
-    "backend" : "pymc",
+    "module_name" : "inference.pymc_backend",
+    "class_name" : "PymcBackend",
     "draws" : 10,
     "chains" : 4,
     "random_seed" : 42,
