@@ -4,9 +4,9 @@ import seaborn as sns
 import arviz as az
 
 
-from src.stats import inverse_compute_stat_witness
+from utils.stats import inverse_compute_stat_witness
 
-def plot_posterior_predictive_stats(samples, true_values, output_dir):
+def plot_posterior_predictive_stats(samples, obs_value, output_dir):
     """Crée et sauvegarde les distributions postérieures"""
     flat_samples = samples.values.reshape(-1, samples.shape[-1])
     processed = np.array([inverse_compute_stat_witness(s) for s in flat_samples])
@@ -39,7 +39,7 @@ def plot_posterior_predictive_stats(samples, true_values, output_dir):
             axes[i].set_xlabel("Valeur")
             axes[i].set_ylabel("Count")
             
-            true_val = true_values[i]
+            true_val = obs_value[i]
             median_val = np.median(processed[:, i])
             
             axes[i].axvline(true_val, color='red', linestyle='-', alpha=0.8, label='Jonas')

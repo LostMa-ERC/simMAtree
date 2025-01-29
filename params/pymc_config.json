@@ -1,0 +1,9 @@
+{
+    "backend" : "pymc",
+    "draws" : 10,
+    "chains" : 4,
+    "random_seed" : 42,
+    "epsilon" : 1,
+    "sum_stat" : "identity",
+    "distance" : "gaussian"
+}
