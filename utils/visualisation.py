@@ -9,7 +9,11 @@ from utils.stats import inverse_compute_stat_witness
 def plot_posterior_predictive_stats(samples, obs_value, output_dir):
     """Crée et sauvegarde les distributions postérieures"""
     flat_samples = samples.values.reshape(-1, samples.shape[-1])
-    processed = np.array([inverse_compute_stat_witness(s) for s in flat_samples])
+    processed = np.array([inverse_compute_stat_witness(s) for s in flat_samples]) 
+
+    if len(processed)==0:
+        print("No samples to plot")
+        return 
     
     fig, axes = plt.subplots(3, 2, figsize=(15, 12))
     axes = axes.ravel()

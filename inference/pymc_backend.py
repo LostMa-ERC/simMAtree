@@ -11,9 +11,10 @@ class PymcBackend(InferenceBackend):
     def run_inference(self, model, data):
         with pm.Model() as pymc_model:
             params = model.get_pymc_priors(pymc_model)
+            nb_param = len(params)
             constraints = model.get_constraints(pymc_model, params)
             simulator = pm.Simulator("s",
-                                    lambda rng, *params, size=None: model.get_simulator(rng, params, size),
+                                    lambda rng, *params, size=None: model.get_simulator(rng, params, params[-1] if len(params) > nb_param else size),
                                     params=params,
                                     distance=self.inference_params["distance"],
                                     sum_stat=self.inference_params["sum_stat"],

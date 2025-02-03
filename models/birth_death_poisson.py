@@ -17,11 +17,14 @@ class BirthDeathPoisson(BaseModel):
         self.Ninact = hyperparams["Ninact"]
         self.max_pop = hyperparams["max_pop"]
     
-    def simulate_pop(self, rng, LDA, lda, mu):
+    def simulate_pop(self, rng, params):
         """
         Generate a Yule population
         """
         
+        LDA = params[0]
+        lda = params[1]
+        mu = params[2]
 
         species_count = {i: 1 for i in range(self.n_init)} if self.n_init > 0 else {}
         next_species_id = self.n_init
@@ -78,11 +81,8 @@ class BirthDeathPoisson(BaseModel):
         return list(final_species_count.values()) if final_species_count else []
 
     def get_simulator(self, rng, params, size=None):
-        LDA = params[0]
-        lda = params[1]
-        mu = params[2]
 
-        witness_nb = self.simulate_pop(rng, LDA, lda, mu)
+        witness_nb = self.simulate_pop(rng, params)
         try:
             if not witness_nb:
                 return np.zeros(6)

@@ -32,11 +32,18 @@ class YuleModel(BaseModel):
                 pm.math.switch((lda + gamma > mu) & (gamma < lda), 0, -np.inf))
         return constraints
     
-    def simulate_pop(self, rng, LDA, lda, gamma, mu):
-        """
-        Generate a Yule population
-        """
+    def simulate_pop(self, rng, params):
         
+        LDA = params[0]
+        lda = params[1]
+        gamma = params[2]
+        mu = params[3]
+        if not isinstance(LDA, float):
+            LDA = LDA[0]
+            lda = lda[0]
+            gamma = gamma[0]
+            mu = mu[0]
+            
 
         species_count = {i: 1 for i in range(self.n_init)} if self.n_init > 0 else {}
         next_species_id = self.n_init
@@ -45,7 +52,7 @@ class YuleModel(BaseModel):
         total_pop = sum(species_count.values())
         
         while t < self.Nact and total_pop <= self.max_pop:
-            n_new_trees = rng.binomial(1, LDA) if total_pop < self.max_pop else 0
+            n_new_trees = rng.binomial(1, LDA)
             
             if n_new_trees:
                 next_species_id += 1
@@ -53,33 +60,32 @@ class YuleModel(BaseModel):
                 total_pop += 1
             
             new_species_count = species_count.copy()
-            
             for species, count in species_count.items():
                 if count == 0:
                     continue
-                
-                if total_pop < self.max_pop:
 
-                    # Copie simple
-                    n_copies = rng.binomial(count, lda)
-                    if n_copies:
-                        new_copies = min(n_copies, self.max_pop - total_pop)
-                        new_species_count[species] += new_copies
-                        total_pop += new_copies
+                probs = [lda, gamma, mu, 1-(lda+gamma+mu)]
+                n_event = rng.multinomial(count, probs)
 
-                    # Spéciation
-                    n_speciations = rng.binomial(count, gamma)
-                    if n_speciations:
-                        new_specs = min(n_speciations, self.max_pop - total_pop)
-                        next_species_id += 1
-                        new_species_count[next_species_id] = new_specs
-                        total_pop += new_specs
+                if total_pop + n_event[0] + n_event[1] > self.max_pop:
+                    return "BREAK"
 
-                # Mort
-                n_deaths = rng.binomial(count, mu)
-                if n_deaths:
-                    new_species_count[species] = max(0, new_species_count[species] - n_deaths)
-                    total_pop -= min(n_deaths, new_species_count[species])
+                # Copy
+                new_species_count[species] += n_event[0]
+                total_pop += n_event[0]
+
+                # Speciation
+                for _ in range(n_event[1]):
+                    next_species_id += 1
+                    new_species_count[next_species_id] = 1
+                total_pop += n_event[1]
+
+                # Death
+                new_species_count[species] = max(0, new_species_count[species] - n_event[2])
+                total_pop -= min(n_event[2], new_species_count[species])
+
+            if total_pop > self.max_pop:
+                return "BREAK"
 
             # Nettoyage des espèces éteintes
             species_count = {k: v for k, v in new_species_count.items() if v > 0}
@@ -102,23 +108,13 @@ class YuleModel(BaseModel):
         return list(final_species_count.values()) if final_species_count else []
 
     def get_simulator(self, rng, params, size=None):
-        LDA = params[0]
-        lda = params[1]
-        gamma = params[2]
-        mu = params[3]
+        witness_nb = self.simulate_pop(rng, params)        
+        stats = compute_stat_witness(witness_nb)
 
-        witness_nb = self.simulate_pop(rng, LDA, lda, gamma, mu)
-        try:
-            if not witness_nb:
-                return np.zeros(6)
-            stats = compute_stat_witness(witness_nb)
-            if not np.all(np.isfinite(stats)):
-                return np.zeros(6)
-            return stats
-        except Exception as e:
-            print(f"Error in simulate_tree_stats: {e}")
-            print()
+        if not np.all(np.isfinite(stats)):
             return np.zeros(6)
-    
+
+        return stats
+
 
 

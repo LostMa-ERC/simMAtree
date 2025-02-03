@@ -4,6 +4,8 @@ def compute_stat_witness(witness_nb):
     """Calcule les statistiques sur la distribution des témoins"""
     if not witness_nb:
         return np.zeros(6)
+    elif witness_nb == "BREAK":
+        return np.ones(6)
     
     witness_nb = np.array(witness_nb, dtype=np.float64)
     nb_oeuvre = witness_nb.size
@@ -24,8 +26,10 @@ def compute_stat_witness(witness_nb):
 
 def inverse_compute_stat_witness(stats):
     """Inverse les statistiques pour retrouver les valeurs d'origine"""
-    if np.sum(stats) == 0:
-        return np.zeros(5)
+    # if np.sum(stats) == 0:
+    #     return np.zeros(5)
+    # elif np.sum(stats) == 6:
+    #     return None
 
     nb_temoins = int(stats[0]*1e6)
     nb_oeuvre = int(stats[1]*1e6)
