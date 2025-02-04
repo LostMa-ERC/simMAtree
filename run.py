@@ -16,7 +16,7 @@ def run(data_path, model, backend, results_dir):
     data = compute_stat_witness(list(witness_counts))
     
     results = backend.run_inference(model, data)
-    
+
     # Sauvegarde et visualisation
     obs_values = inverse_compute_stat_witness(data)
     backend.save_results(obs_values, results_dir)

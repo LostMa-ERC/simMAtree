@@ -19,7 +19,7 @@ class YuleModel(BaseModel):
 
     def get_pymc_priors(self, model):
         with model:
-            LDA = pm.Uniform('LDA', lower=0, upper=0.01)
+            LDA = pm.Uniform('LDA', lower=0, upper=0.05)
             lda = pm.Uniform('lda', lower=0, upper=0.05)
             gamma = pm.Uniform('gamma', lower=0, upper=0.01)
             mu = pm.Uniform('mu', lower=0, upper=0.01)
@@ -52,7 +52,7 @@ class YuleModel(BaseModel):
         total_pop = sum(species_count.values())
         
         while t < self.Nact and total_pop <= self.max_pop:
-            n_new_trees = rng.binomial(1, LDA)
+            n_new_trees = rng.poisson(LDA)
             
             if n_new_trees:
                 next_species_id += 1

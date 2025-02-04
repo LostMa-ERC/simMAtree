@@ -32,6 +32,13 @@ class PymcBackend(InferenceBackend):
             idata.extend(pm.sample_posterior_predictive(idata))
             self.results = idata
 
+            samples = idata.posterior_predictive.s
+            pp_samples = samples.values.reshape(-1, samples.shape[-1])
+            
+            print(f'Number of PP samples :{len(pp_samples)}')
+            print(f'Number of PP samples without survivors : {len([p for p in pp_samples if sum(p) == 0])}')
+            print(f'Number of PP samples with population > MAX: {len([p for p in pp_samples if sum(p) == 6])}')
+
         return self.results
     
     def save_results(self, obs_values, output_dir):
