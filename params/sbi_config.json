@@ -1,0 +1,9 @@
+{
+    "module_name" : "inference.sbi_backend",
+    "class_name" : "SbiBackend",
+    "method" : "NPE",
+    "num_simulations" : 100,
+    "num_rounds" : 5,
+    "random_seed" : 42,
+    "num_samples" : 1000
+}
