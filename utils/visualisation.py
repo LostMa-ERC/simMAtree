@@ -2,9 +2,52 @@ import numpy as np
 import matplotlib.pyplot as plt
 import seaborn as sns
 import arviz as az
+import torch 
+
+from sbi.analysis import pairplot
 
 
 from utils.stats import inverse_compute_stat_witness
+
+def plot_sbi_pairplot(samples, output_dir):
+       
+    fig = plt.figure(figsize=(12, 10))
+    param_samples = torch.tensor(samples)
+    pairplot(param_samples,
+             figsize=(12, 10),
+             diag="kde",
+             upper="kde")
+    plt.tight_layout()
+    plt.savefig(f"{output_dir}/posterior_pairs.png")
+    plt.close()
+
+def plot_marginal_posterior(samples, output_dir):
+    summary_stats = {
+        'mean': np.mean(samples, axis=0),
+        'std': np.std(samples, axis=0),
+        '5%': np.percentile(samples, 5, axis=0),
+        '50%': np.percentile(samples, 50, axis=0),
+        '95%': np.percentile(samples, 95, axis=0)
+    }
+
+    fig, axes = plt.subplots(1, samples.shape[1], figsize=(4*samples.shape[1], 4))
+    if samples.shape[1] == 1:
+        axes = [axes]
+        
+    for i, ax in enumerate(axes):
+        if i < samples.shape[1]:
+            param_data = samples[:, i]
+            sns.kdeplot(param_data, ax=ax, fill=True)
+            ax.axvline(summary_stats['mean'][i], color='r', linestyle='-', label='Mean')
+            ax.axvline(summary_stats['50%'][i], color='g', linestyle='--', label='Median')
+            ax.axvline(summary_stats['5%'][i], color='b', linestyle=':', label='5%')
+            ax.axvline(summary_stats['95%'][i], color='b', linestyle=':', label='95%')
+            if i == 0:
+                ax.legend()
+    
+    plt.tight_layout()
+    plt.savefig(f"{output_dir}/posterior.png")
+    plt.close()
 
 def plot_posterior_predictive_stats(samples, obs_value, output_dir):
     """Crée et sauvegarde les distributions postérieures"""

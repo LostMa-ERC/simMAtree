@@ -111,7 +111,7 @@ class YuleModel(BaseModel):
     def get_sbi_priors(self):
         # LDA, lda, gamma, mu
         lower_bounds = torch.tensor([0.0, 0.0, 0.0, 0.0]) 
-        upper_bounds = torch.tensor([0.05, 0.015, 0.01, 0.01])  
+        upper_bounds = torch.tensor([1, 0.015, 0.01, 0.01])  
 
         prior = ConstrainedUniform(lower_bounds, upper_bounds)
         prior, num_parameters, prior_returns_numpy = process_prior(prior)

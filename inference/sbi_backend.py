@@ -3,11 +3,15 @@ import json
 import torch
 import matplotlib.pyplot as plt
 import pandas as pd
-from sbi.inference import SNPE, NPE, NRE, SNLE, BNRE, simulate_for_sbi
+import sbi.inference
+import xarray as xr
+
+
+from sbi.inference import simulate_for_sbi
 from sbi.utils.user_input_checks import check_sbi_inputs, process_simulator
 from sbi.analysis import pairplot
 from inference.base_backend import InferenceBackend
-from utils.visualisation import plot_posterior_predictive_stats
+from utils.visualisation import plot_posterior_predictive_stats, plot_marginal_posterior, plot_sbi_pairplot
 
 class SbiBackend(InferenceBackend):
     def __init__(self, config_file):
@@ -32,19 +36,11 @@ class SbiBackend(InferenceBackend):
         check_sbi_inputs(simulator, prior)
         
         # Choose inference method
-        method = self.inference_params["method"].upper()
-        if method == "NPE":
-            inference = NPE(prior=prior)
-        elif method == "SNPE":
-            inference = SNPE(prior=prior)
-        elif method == "NRE":
-            inference = NRE(prior=prior)
-        elif method == "SNLE":
-            inference = SNLE(prior=prior)
-        elif method == "BNRE":
-            inference = BNRE(prior=prior)
-        else:
-            raise ValueError(f"Unknown SBI method: {method}")
+        Model_class = getattr(sbi.inference, self.inference_params["method"].upper())
+        try:
+            inference = Model_class(prior=prior)
+        except:
+            raise ValueError(f"Unknown SBI method")
         
         # Perform inference with multiple rounds
         num_simulations = self.inference_params["num_simulations"]
@@ -76,54 +72,12 @@ class SbiBackend(InferenceBackend):
         
         pp_samples = np.array(pp_samples)
         
-        # Create a structure similar to PyMC's InferenceData
-        import xarray as xr
-        import arviz as az
-        
-        # Structure samples to mimic PyMC's chains and draws
-        n_chains = 4  # Match PyMC's default chains
-        chain_length = num_samples // n_chains
-        reshaped_samples = samples_np[:n_chains * chain_length].reshape(n_chains, chain_length, -1)
-        
-        # Create xarray datasets
-        posterior_coords = {
-            "chain": np.arange(n_chains),
-            "draw": np.arange(chain_length),
-            "param": [f"param_{i}" for i in range(samples_np.shape[1])]
+        self.results = {
+            'posterior_samples': samples_np,
+            'posterior_predictive': pp_samples,
+            'observed_data': x_o.numpy(),
+            'parameter_names': [f"param_{i}" for i in range(samples_np.shape[1])]
         }
-        
-        posterior_data = xr.DataArray(
-            reshaped_samples,
-            coords=posterior_coords,
-            dims=["chain", "draw", "param"]
-        ).to_dataset(dim="param")
-        
-        # Structure posterior predictive samples
-        pp_chains = min(n_chains, pp_samples.shape[0] // chain_length)
-        pp_draws = min(chain_length, pp_samples.shape[0] // pp_chains)
-        
-        # Ensure we have at least one sample
-        if pp_chains == 0 or pp_draws == 0:
-            pp_chains = 1
-            pp_draws = pp_samples.shape[0]
-        
-        pp_reshaped = pp_samples[:pp_chains * pp_draws].reshape(pp_chains, pp_draws, -1)
-        
-        pp_coords = {
-            "chain": np.arange(pp_chains),
-            "draw": np.arange(pp_draws),
-            "stat": np.arange(pp_samples.shape[1])
-        }
-        
-        pp_data = xr.Dataset(
-            {"s": (["chain", "draw", "stat"], pp_reshaped)}
-        )
-        
-        # Create InferenceData object
-        self.results = az.InferenceData(
-            posterior=posterior_data,
-            posterior_predictive=pp_data
-        )
         
         return self.results
     
@@ -132,19 +86,32 @@ class SbiBackend(InferenceBackend):
             print("Inference needs to be done before saving the results")
             return
         
-        import arviz as az
+        # Create summary statistics for parameters
+        samples = self.results['posterior_samples']
         
-        # Summary statistics
-        summary = az.summary(self.results)
-        summary.to_csv(f"{output_dir}/results_summary.csv")
+        # Calculate summary statistics
+        summary_stats = {
+            'mean': np.mean(samples, axis=0),
+            'std': np.std(samples, axis=0),
+            '5%': np.percentile(samples, 5, axis=0),
+            '50%': np.percentile(samples, 50, axis=0),
+            '95%': np.percentile(samples, 95, axis=0)
+        }
         
-        # Plot inference checks using the same functions as for PyMC
-        from utils.visualisation import plot_inference_checks
-        plot_inference_checks(self.results, output_dir)
+        # Create summary DataFrame
+        summary_df = pd.DataFrame(summary_stats)
+        summary_df.to_csv(f"{output_dir}/results_summary.csv")
         
-        # Plot posterior predictive checks
+        pp_samples_xr = xr.DataArray(
+            self.results['posterior_predictive'],
+            dims=["sample", "stat"]
+        )
         plot_posterior_predictive_stats(
-            self.results.posterior_predictive.s,
+            pp_samples_xr,
             obs_values,
             output_dir
         )
+        plot_sbi_pairplot(samples, output_dir)
+        plot_marginal_posterior(samples, output_dir)
+
+        
