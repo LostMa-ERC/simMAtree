@@ -61,7 +61,7 @@ inference_bdp_pymc() {
 inference_yule_sbi() {
     echo "Inférence avec le modèle Yule et SBI..."
     python run.py --task inference \
-                 --data_path "${DATA_DIR}synthetic_yule.csv" \
+                 --data_path "${DATA_DIR}simulation.csv" \
                  --model_config "${MODEL_CONFIG_YULE}" \
                  --inference_config "${INFERENCE_CONFIG_SBI}" \
                  --results_dir "${OUTPUT_DIR}yule_sbi/"

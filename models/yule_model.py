@@ -135,11 +135,14 @@ class YuleModel(BaseModel):
             lda = params[1]
             gamma = params[2]
             mu = params[3]
-            if not isinstance(LDA, float):
-                LDA = LDA[0]
-                lda = lda[0]
-                gamma = gamma[0]
-                mu = mu[0]
+            try:
+                if not isinstance(LDA, float) and hasattr(LDA, '__getitem__'):
+                    LDA = LDA[0]
+                    lda = lda[0]
+                    gamma = gamma[0]
+                    mu = mu[0]
+            except:
+                pass
         return LDA, lda, gamma, mu
             
 
