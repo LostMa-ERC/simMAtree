@@ -16,6 +16,7 @@ from utils.visualisation import plot_posterior_predictive_stats, plot_marginal_p
 class SbiBackend(InferenceBackend):
     def __init__(self, config_file):
         super(SbiBackend, self).__init__(config_file)
+        self.device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
     def run_inference(self, model, data):
         # Convert data to torch tensor if it's not already
@@ -37,8 +38,9 @@ class SbiBackend(InferenceBackend):
         
         # Choose inference method
         Model_class = getattr(sbi.inference, self.inference_params["method"].upper())
+        print(f"Current device: {self.device}")
         try:
-            inference = Model_class(prior=prior)
+            inference = Model_class(prior=prior, device=self.device)
         except:
             raise ValueError(f"Unknown SBI method")
         
