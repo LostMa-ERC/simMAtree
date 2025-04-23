@@ -16,10 +16,15 @@ from utils.visualisation import plot_posterior_predictive_stats, plot_marginal_p
 class SbiBackend(InferenceBackend):
     def __init__(self, config_file):
         super(SbiBackend, self).__init__(config_file)
-        self.device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+        self.device = self.inference_params.get("device", "cpu")
 
     def run_inference(self, model, data):
-        # Convert data to torch tensor if it's not already
+                
+        print(f"Training device: {self.device}")
+        simulation_device = torch.device('cpu')
+        print(f"Simulation device: {simulation_device}")
+
+        # Convert data to torch tensor
         x_o = torch.tensor(data, dtype=torch.float32).to(self.device)
         
         # Get prior from model
@@ -38,7 +43,6 @@ class SbiBackend(InferenceBackend):
         
         # Choose inference method
         Model_class = getattr(sbi.inference, self.inference_params["method"].upper())
-        print(f"Current device: {self.device}")
         try:
             inference = Model_class(prior=prior, device=self.device)
         except:
@@ -50,6 +54,7 @@ class SbiBackend(InferenceBackend):
         
         posteriors = []
         proposal = prior
+        # TODO : This part must be change if self.device == "cuda" (alternate between cpu and gpu for simulation and learning) 
         
         for i in range(num_rounds):
             print(f"ROUND {i+1}")
