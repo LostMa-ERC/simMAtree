@@ -20,10 +20,10 @@ class SbiBackend(InferenceBackend):
 
     def run_inference(self, model, data):
         # Convert data to torch tensor if it's not already
-        x_o = torch.tensor(data, dtype=torch.float32)
+        x_o = torch.tensor(data, dtype=torch.float32).to(self.device)
         
         # Get prior from model
-        prior = model.get_sbi_priors()
+        prior = model.get_sbi_priors(device=self.device)
         
         # Define simulator wrapper
         def sbi_simulator_wrapper(params):

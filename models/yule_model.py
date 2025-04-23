@@ -23,14 +23,19 @@ class ConstrainedUniform(Distribution):
             high: borne supérieure [LDA, lda, gamma, mu]
             device: périphérique pour les tenseurs
         """
-        device = low.device if isinstance(low, torch.Tensor) else device
-        device = torch.device('cpu' if device is None else device)
+        if device is None:
+            device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+        elif isinstance(device, str):
+            device = torch.device(device)
         
-        # Convertir en tenseurs si nécessaire
         if not isinstance(low, torch.Tensor):
             low = torch.tensor(low, dtype=torch.float32, device=device)
+        else:
+            low = low.to(device)
         if not isinstance(high, torch.Tensor):
             high = torch.tensor(high, dtype=torch.float32, device=device)
+        else:
+            high = high.to(device)
             
         # Distribution uniforme de base
         self.base_dist = Independent(Uniform(low, high), 1)
@@ -108,12 +113,12 @@ class YuleModel(BaseModel):
             mu = pm.Uniform('mu', lower=0, upper=0.01)
         return LDA, lda, gamma, mu
 
-    def get_sbi_priors(self):
+    def get_sbi_priors(self, device='cpu'):
         # LDA, lda, gamma, mu
-        lower_bounds = torch.tensor([0.0, 0.0, 0.0, 0.0]) 
-        upper_bounds = torch.tensor([1, 0.015, 0.01, 0.01])  
+        lower_bounds = torch.tensor([0.0, 0.0, 0.0, 0.0], device=device) 
+        upper_bounds = torch.tensor([1, 0.015, 0.01, 0.01], device=device)  
 
-        prior = ConstrainedUniform(lower_bounds, upper_bounds)
+        prior = ConstrainedUniform(lower_bounds, upper_bounds, device=device)
         prior, num_parameters, prior_returns_numpy = process_prior(prior)
         return prior
 
