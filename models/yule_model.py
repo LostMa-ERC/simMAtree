@@ -2,6 +2,8 @@ import numpy as np
 import pymc as pm
 import json
 import torch
+from torch.distributions.constraints import independent, interval
+
 from sbi.utils.user_input_checks import process_prior
 
 from utils.stats import compute_stat_witness
@@ -46,6 +48,18 @@ class ConstrainedUniform(Distribution):
         batch_shape = self.base_dist.batch_shape
         event_shape = self.base_dist.event_shape
         super().__init__(batch_shape, event_shape)
+    
+    @property
+    def support(self):
+        return independent(interval(self._low, self._high), 1)
+        
+    @property
+    def mean(self):
+        return (self._low + self._high) / 2.0
+        
+    @property
+    def stddev(self):
+        return (self._high - self._low) / (2.0 * np.sqrt(3.0))
     
     def _check_constraints(self, x):
         # Contrainte 1: lda + gamma > mu (indices 1, 2, 3)

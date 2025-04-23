@@ -53,7 +53,7 @@ class SbiBackend(InferenceBackend):
         
         for i in range(num_rounds):
             print(f"ROUND {i+1}")
-            params, x = simulate_for_sbi(simulator, proposal, num_simulations)
+            params, x = simulate_for_sbi(simulator, proposal, num_simulations, num_workers=self.inference_params["num_workers"])
             density_estimator = inference.append_simulations(params, x, proposal=proposal).train()
             posterior = inference.build_posterior(density_estimator)
             posteriors.append(posterior)
