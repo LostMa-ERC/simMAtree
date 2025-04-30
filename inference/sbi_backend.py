@@ -11,7 +11,7 @@ from sbi.inference import simulate_for_sbi
 from sbi.utils.user_input_checks import check_sbi_inputs, process_simulator
 from sbi.analysis import pairplot
 from inference.base_backend import InferenceBackend
-from utils.visualisation import plot_posterior_predictive_stats, plot_marginal_posterior, plot_sbi_pairplot
+from utils.visualisation import plot_posterior_predictive_stats, plot_marginal_posterior, plot_sbi_pairplot, compute_hpdi_point
 
 class SbiBackend(InferenceBackend):
     def __init__(self, config_file):
@@ -70,6 +70,8 @@ class SbiBackend(InferenceBackend):
         
         # Create posterior predictive samples
         samples_np = samples.cpu().numpy()
+        hpdi_point, hpdi_samples, _ = compute_hpdi_point(samples_np, prob_level=0.95)
+        
         num_pp = 100
         pp_samples = []
         for i in range(min(num_pp, len(samples_np))):
@@ -83,7 +85,9 @@ class SbiBackend(InferenceBackend):
             'posterior_samples': samples_np,
             'posterior_predictive': pp_samples,
             'observed_data': x_o.numpy(),
-            'parameter_names': [f"param_{i}" for i in range(samples_np.shape[1])]
+            'parameter_names': [f"param_{i}" for i in range(samples_np.shape[1])],
+            'hpdi_point': hpdi_point,
+            'hpdi_samples': hpdi_samples
         }
         
         return self.results
@@ -102,7 +106,8 @@ class SbiBackend(InferenceBackend):
             'std': np.std(samples, axis=0),
             '5%': np.percentile(samples, 5, axis=0),
             '50%': np.percentile(samples, 50, axis=0),
-            '95%': np.percentile(samples, 95, axis=0)
+            '95%': np.percentile(samples, 95, axis=0),
+            'hpdi_95%': self.results['hpdi_point']
         }
         
         # Create summary DataFrame

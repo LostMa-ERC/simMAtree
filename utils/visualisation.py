@@ -3,25 +3,50 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 import arviz as az
 import torch 
+from scipy.stats import gaussian_kde
+from sklearn.neighbors import KernelDensity
 
 from sbi.analysis import pairplot
 
 
 from utils.stats import inverse_compute_stat_witness
 
-def plot_sbi_pairplot(samples, output_dir):
+def plot_sbi_pairplot(samples, output_dir, hpdi_point=None):
        
-    fig = plt.figure(figsize=(12, 10))
     param_samples = torch.tensor(samples)
-    pairplot(param_samples,
-             figsize=(12, 10),
+    fig, axes = pairplot(param_samples,
+             figsize=(8, 8),
              diag="kde",
-             upper="kde")
+             upper="kde",
+             labels=[r"$\Lambda$", r"$\lambda$", r"$\gamma$", r"$\mu$"])
+    
+    if hpdi_point is not None:
+        n_dims = len(hpdi_point)
+        
+        # Tracer le point HPDI sur chaque sous-graphique
+        for i in range(n_dims):
+            for j in range(i+1, n_dims):
+                ax_upper = axes[i, j]
+                # Tracer le point HPDI
+                ax_upper.scatter(hpdi_point[j], hpdi_point[i], color='red', marker='*', s=100, label="HPDI 95%", zorder=10)
+                
+                # Ne mettre la légende que sur un seul graphique
+                if i == 1 and j == 0:
+                    ax_upper.legend(fontsize=10)
+                
+            # Ajouter le point à la diagonale
+            ax_diag = axes[i, i]
+            if hasattr(ax_diag, 'axvline'):  # Si c'est un axe de plot
+                ax_diag.axvline(hpdi_point[i], color='red', linestyle='--', linewidth=2, label="HPDI 95%" if i == 0 else None)
+                if i == 0:
+                    ax_diag.legend(fontsize=10)
+    
+
     plt.tight_layout()
     plt.savefig(f"{output_dir}/posterior_pairs.png")
     plt.close()
 
-def plot_marginal_posterior(samples, output_dir):
+def plot_marginal_posterior(samples, output_dir, hpdi_point=None):
     summary_stats = {
         'mean': np.mean(samples, axis=0),
         'std': np.std(samples, axis=0),
@@ -42,6 +67,10 @@ def plot_marginal_posterior(samples, output_dir):
             ax.axvline(summary_stats['50%'][i], color='g', linestyle='--', label='Median')
             ax.axvline(summary_stats['5%'][i], color='b', linestyle=':', label='5%')
             ax.axvline(summary_stats['95%'][i], color='b', linestyle=':', label='95%')
+            if hpdi_point is not None:
+                ax.axvline(hpdi_point[i], color='purple', linestyle='-.',
+                          linewidth=2, label='HPDI 95%')
+                
             if i == 0:
                 ax.legend()
     
@@ -89,11 +118,11 @@ def plot_posterior_predictive_stats(samples, obs_value, output_dir):
             true_val = obs_value[i]
             median_val = np.median(processed[:, i])
             
-            axes[i].axvline(true_val, color='red', linestyle='-', alpha=0.8, label='Jonas')
+            axes[i].axvline(true_val, color='red', linestyle='-', alpha=0.8, label='Observation')
             axes[i].axvline(median_val, color='green', linestyle='--', alpha=0.5)
             
             axes[i].text(0.95, 0.95,
-                f'Jonas: {true_val:.2e}\nMédiane: {median_val:.2e}',
+                f'Observation: {true_val:.2e}\nMédiane: {median_val:.2e}',
                 transform=axes[i].transAxes,
                 verticalalignment='top',
                 horizontalalignment='right',
@@ -129,4 +158,101 @@ def plot_inference_checks(idata, output_dir):
     plt.tight_layout()
     
 
+def compute_hpdi_point(samples, prob_level=0.95, method='kde'):
+    """
+    Calcule le point médian de la région de plus haute densité de probabilité (HPDI)
+    pour un ensemble d'échantillons multivariés.
+    
+    Parameters:
+    -----------
+    samples : numpy.ndarray
+        Échantillons de la distribution postérieure, shape (n_samples, n_dimensions)
+    prob_level : float, optional (default=0.95)
+        Niveau de probabilité pour le HPDI (ex: 0.95 pour 95% HPDI)
+    method : str, optional (default='kde')
+        Méthode pour estimer la densité: 'kde' utilise scipy.stats.gaussian_kde,
+        'sklearn' utilise sklearn.neighbors.KernelDensity
+        
+    Returns:
+    --------
+    hpdi_point : numpy.ndarray
+        Point médian du HPDI, shape (n_dimensions,)
+    hpdi_samples : numpy.ndarray
+        Échantillons qui se trouvent dans la région HPDI
+    """
+    n_samples, n_dims = samples.shape
+    
+    if method == 'kde':
+        kde = gaussian_kde(samples.T)
+        densities = kde(samples.T)
+    elif method == 'sklearn':
+        # Utiliser sklearn.neighbors.KernelDensity (plus rapide pour grandes dimensions)
+        kde = KernelDensity(kernel='gaussian', bandwidth='scott').fit(samples)
+        log_densities = kde.score_samples(samples)
+        densities = np.exp(log_densities)
+    else:
+        raise ValueError(f"Méthode '{method}' non reconnue.")
+    
+    # Trier les échantillons par densité décroissante
+    sorted_indices = np.argsort(-densities)
+    sorted_samples = samples[sorted_indices]
+    sorted_densities = densities[sorted_indices]
+    
+    # Calculer la densité cumulative normalisée
+    cumulative_densities = np.cumsum(sorted_densities) / np.sum(sorted_densities)
+    
+    # Déterminer le seuil pour le niveau de probabilité spécifié
+    threshold_idx = np.searchsorted(cumulative_densities, prob_level)
+    threshold_idx = min(threshold_idx, len(cumulative_densities) - 1)
+    
+    # Extraire les échantillons dans la région HPDI
+    hpdi_samples = sorted_samples[:threshold_idx + 1]
+    
+    # Calculer le point médian de la région HPDI
+    # Option 1: Moyenne des échantillons dans HPDI (centre de masse)
+    # hpdi_point = np.mean(hpdi_samples, axis=0)
+    
+    # Option 2: Médiane géométrique (plus robuste)
+    hpdi_point = np.median(hpdi_samples, axis=0)
+    
+    # Option 3: échantillon avec la densité maximale (MAP)
+    # hpdi_point = sorted_samples[0]
+    
+    return hpdi_point, hpdi_samples
 
+def plot_hpdi_samples(results, output_dir):
+    """Visualiser les échantillons inclus dans la région HPDI et le point HPDI"""
+    samples = results['posterior_samples']
+    hpdi_samples = results['hpdi_samples']
+    hpdi_point = results['hpdi_point']
+    
+    n_params = samples.shape[1]
+    param_names = ["LDA", "lda", "gamma", "mu"]
+    if len(param_names) != n_params:
+        param_names = [f"param_{i}" for i in range(n_params)]
+    
+    # Créer une matrice de scatter plots pour visualiser les paires de paramètres
+    fig, axes = plt.subplots(n_params, n_params, figsize=(12, 12))
+    
+    for i in range(n_params):
+        for j in range(n_params):
+            ax = axes[i, j]
+            
+            if i == j:
+                # Diagonale: histogramme
+                ax.hist(samples[:, i], bins=30, alpha=0.3, color='blue', density=True)
+                ax.hist(hpdi_samples[:, i], bins=30, alpha=0.6, color='red', density=True)
+                ax.axvline(hpdi_point[i], color='black', linestyle='--', linewidth=2)
+                ax.set_xlabel(param_names[i])
+                ax.set_ylabel('Densité')
+            else:
+                # Scatter plot pour les paires de paramètres
+                ax.scatter(samples[:, j], samples[:, i], alpha=0.1, s=5, color='blue')
+                ax.scatter(hpdi_samples[:, j], hpdi_samples[:, i], alpha=0.3, s=5, color='red')
+                ax.scatter(hpdi_point[j], hpdi_point[i], color='black', s=100, marker='*')
+                ax.set_xlabel(param_names[j])
+                ax.set_ylabel(param_names[i])
+    
+    plt.tight_layout()
+    plt.savefig(f"{output_dir}/hpdi_visualization.png")
+    plt.close()

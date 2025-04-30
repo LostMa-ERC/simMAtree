@@ -39,7 +39,6 @@ class ConstrainedUniform(Distribution):
         else:
             high = high.to(device)
             
-        # Distribution uniforme de base
         self.base_dist = Independent(Uniform(low, high), 1)
         
         # Dimension du prior est 4: [LDA, lda, gamma, mu]
