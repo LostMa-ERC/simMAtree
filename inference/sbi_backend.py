@@ -70,7 +70,7 @@ class SbiBackend(InferenceBackend):
         
         # Create posterior predictive samples
         samples_np = samples.cpu().numpy()
-        hpdi_point, hpdi_samples, _ = compute_hpdi_point(samples_np, prob_level=0.95)
+        hpdi_point, hpdi_samples = compute_hpdi_point(samples_np, prob_level=0.95)
         
         num_pp = 100
         pp_samples = []

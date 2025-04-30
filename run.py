@@ -5,7 +5,7 @@ import json
 
 from importlib import import_module
 from utils.stats import compute_stat_witness, inverse_compute_stat_witness
-
+from utils.evaluation import evaluate_inference
 
 
 def run(data_path, model, backend, results_dir):
@@ -22,10 +22,18 @@ def run(data_path, model, backend, results_dir):
     backend.save_results(obs_values, results_dir)
     return results
 
-def generate_dataset(data_path, model, model_param):
-    rng = np.random.default_rng(42)
+def generate_dataset(data_path, model, model_param = None, seed=42):
+    rng = np.random.default_rng(seed)
 
-    pop = model.simulate_pop(rng, list(model_param.values()))
+    if model_param is None:
+        parameters = model.sample_from_prior()
+        print("\nPARAMETERS_JSON_START")
+        print(json.dumps(parameters))
+        print("PARAMETERS_JSON_END")
+    else:
+        parameters = model_param
+
+    pop = model.simulate_pop(rng, list(parameters.values()))
     if pop == []:
         print("No survivors in the simulation!")
         return 
@@ -58,12 +66,13 @@ def generate_dataset(data_path, model, model_param):
     print(f"Works Number: {s[1]}")
     print(f"Max Witnesses: {s[2]}")
     print(f"Number of 1: {s[4]}")
+    
 
 
 def main():
     parser = argparse.ArgumentParser(description="run the inference or the generation method")
 
-    parser.add_argument('--task', type=str, required=True, choices=['inference', 'generate'],
+    parser.add_argument('--task', type=str, required=True, choices=['inference', 'generate', 'score'],
                        help='Choose the task')
 
     parser.add_argument('--data_path', type=str, required=False,
@@ -72,9 +81,13 @@ def main():
                       help='JSON file')
     parser.add_argument('--inference_config', type=str, required=False,
                       help='JSON file')
+    parser.add_argument('--seed', type=int, default=42,
+                      help='Random seed')
     parser.add_argument('--results_dir', type=str, default="results/",
                       help='Dossier de sortie')
-    
+    parser.add_argument('--true_params', type=str, required=False,
+                    help='Valeurs réelles des paramètres au format JSON (pour la tâche score)')
+
     args = parser.parse_args()
 
     with open(args.model_config) as f:
@@ -109,8 +122,43 @@ def main():
         generate_dataset(
             data_path=args.data_path,
             model=model,
-            model_param=model_param["params"]
+            model_param=model_param["params"],
+            seed=args.seed
         )
+    elif args.task == 'score':
+        if args.true_params is None:
+            true_params = model_param["params"] 
+        else:
+            # Charger true_params depuis le fichier JSON fourni
+            with open(args.true_params) as f:
+                true_params = json.load(f)
+        
+        # Déterminer les noms de paramètres en fonction du modèle
+        if model_param["class_name"] == "YuleModel":
+            param_names = ["LDA", "lda", "gamma", "mu"]
+        elif model_param["class_name"] == "BirthDeathPoisson":
+            param_names = ["LDA", "lda", "mu"]
+        else:
+            param_names = list(true_params.keys())
+        
+        # Exécuter l'évaluation
+        summary, param_summary = evaluate_inference(
+            true_params=true_params if isinstance(true_params, list) else list(true_params.values()),
+            results_dir=args.results_dir,
+            param_names=param_names
+        )
+        
+        # Afficher le résumé
+        print("\n=== Summary of Evaluation Metrics ===")
+        for metric, value in summary.items():
+            print(f"{metric}: {value}")
+        
+        print("\n=== Parameter-Specific Metrics ===")
+        for param, metrics in param_summary.items():
+            print(f"\n{param}:")
+            for metric, value in metrics.items():
+                print(f"  {metric}: {value}")
+
 
 if __name__ == "__main__":
     main()
