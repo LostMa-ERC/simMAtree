@@ -5,6 +5,7 @@ import matplotlib.pyplot as plt
 import pandas as pd
 import sbi.inference
 import xarray as xr
+from tqdm import tqdm
 
 
 from sbi.inference import simulate_for_sbi
@@ -69,19 +70,21 @@ class SbiBackend(InferenceBackend):
             proposal = posterior.set_default_x(x_o)
         
         # Get samples from the posterior
-        num_samples = self.inference_params["num_samples"]
+        num_samples = 5000
         samples = posterior.sample((num_samples,), x=x_o)
         
         # Create posterior predictive samples
         samples_np = samples.cpu().numpy()
         hpdi_point, hpdi_samples = compute_hpdi_point(samples_np, prob_level=0.95)
         
-        num_pp = 100
-        pp_samples = []
-        for i in range(min(num_pp, len(samples_np))):
-            param = samples_np[i]
-            sim = model.get_simulator(self.rng, param)
-            pp_samples.append(sim)
+        _, pp_samples = simulate_for_sbi(simulator, proposal, self.inference_params["num_samples"], num_workers=self.inference_params["num_workers"])
+
+        # num_pp = 100
+        # pp_samples = []
+        # for i in tqdm(range(min(num_pp, len(samples_np))), desc="Generating posterior predictive samples"):
+        #     param = samples_np[i]
+        #     sim = model.get_simulator(self.rng, param)
+        #     pp_samples.append(sim)
         
         pp_samples = np.array(pp_samples)
         
@@ -103,6 +106,9 @@ class SbiBackend(InferenceBackend):
         
         # Create summary statistics for parameters
         samples = self.results['posterior_samples']
+
+        np.save(f"{output_dir}/posterior_samples.npy", samples)
+        np.save(f"{output_dir}/posterior_predictive.npy", self.results['posterior_predictive'])
         
         # Calculate summary statistics
         summary_stats = {

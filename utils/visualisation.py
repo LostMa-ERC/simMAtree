@@ -132,7 +132,7 @@ def plot_posterior_predictive_stats(samples, obs_value, output_dir):
         axes[-1].remove()
     
     plt.tight_layout()
-    plt.savefig(output_dir+"pp_summaries.png")
+    plt.savefig(output_dir+"/pp_summaries.png")
     plt.close()
 
 

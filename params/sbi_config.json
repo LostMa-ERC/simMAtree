@@ -5,7 +5,7 @@
     "num_simulations" : 100,
     "num_rounds" : 2,
     "random_seed" : 42,
-    "num_samples" : 5000,
+    "num_samples" : 200,
     "num_workers" : 10,
     "device" : "cpu"
 }

@@ -68,7 +68,7 @@ class ConstrainedUniform(Distribution):
         constraint2 = x[..., 2] < x[..., 1]
 
         # Contrainte 3: E[population d'un arbre] < 10^4
-        constraint3 = avg_yule_pop(x[...,1], x[...,2], x[...,3], 1000,1000) <= 10**4
+        constraint3 = avg_yule_pop(x[...,1], x[...,2], x[...,3], 1000,1000) <= 10**5
         
         return constraint1 & constraint2 & constraint3
     
@@ -78,7 +78,7 @@ class ConstrainedUniform(Distribution):
         valid = self._check_constraints(samples)
         
         # Continuer à échantillonner jusqu'à ce que tous les échantillons soient valides
-        max_attempts = 100
+        max_attempts = 200
         attempt = 0
         
         while not torch.all(valid) and attempt < max_attempts:
