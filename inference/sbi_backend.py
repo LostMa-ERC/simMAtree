@@ -59,6 +59,10 @@ class SbiBackend(InferenceBackend):
         for i in range(num_rounds):
             print(f"ROUND {i+1}")
             params, x = simulate_for_sbi(simulator, proposal, num_simulations, num_workers=self.inference_params["num_workers"])
+            zero_counter = torch.sum(torch.all(x == 0, dim=1)).item()
+            break_counter = torch.sum(torch.all(x == 1, dim=1)).item()
+            print(f"\n{zero_counter} zero occurrences out of {num_simulations} simulations ({zero_counter/num_simulations*100:.2f}%)")
+            print(f"{break_counter} BREAK occurrences out of {num_simulations} simulations ({break_counter/num_simulations*100:.2f}%)\n")
             density_estimator = inference.append_simulations(params, x, proposal=proposal).train()
             posterior = inference.build_posterior(density_estimator)
             posteriors.append(posterior)

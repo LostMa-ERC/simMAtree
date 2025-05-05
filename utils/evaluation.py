@@ -35,11 +35,7 @@ def evaluate_inference(true_params, results_dir, param_names=None):
     # Charger le résumé des résultats qui contient hpdi_point
     try:
         results_summary = pd.read_csv(f"{results_dir}/results_summary.csv")
-        hpdi_values = results_summary.loc[0, 'hpdi_95%']
-        
-        # Si hpdi_values est une chaîne, la convertir en liste
-        if isinstance(hpdi_values, str):
-            hpdi_values = json.loads(hpdi_values.replace("'", '"'))
+        hpdi_values = results_summary['hpdi_95%']
         
     except (FileNotFoundError, KeyError):
         print(f"Erreur: Impossible de trouver les valeurs HPDI dans {results_dir}/results_summary.csv")

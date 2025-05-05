@@ -7,7 +7,7 @@ from torch.distributions.constraints import independent, interval
 from sbi.utils.user_input_checks import process_prior
 
 from utils.stats import compute_stat_witness
-
+from utils.yule import avg_yule_pop
 from models.base_model import BaseModel
 
 import torch
@@ -66,8 +66,11 @@ class ConstrainedUniform(Distribution):
         
         # Contrainte 2: gamma < lda (indices 1, 2)
         constraint2 = x[..., 2] < x[..., 1]
+
+        # Contrainte 3: E[population d'un arbre] < 10^4
+        constraint3 = avg_yule_pop(x[...,1], x[...,2], x[...,3], 1000,1000) <= 10**4
         
-        return constraint1 & constraint2
+        return constraint1 & constraint2 & constraint3
     
     def sample(self, sample_shape=torch.Size()):
         """Échantillonnage par rejet pour respecter les contraintes"""

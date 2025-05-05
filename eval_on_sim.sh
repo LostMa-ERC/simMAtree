@@ -35,7 +35,7 @@ for ((i=1; i<=$N_REPLICATES; i++)); do
 
     mkdir -p "$REPLICATE_DIR"
     
-    echo "Generating synthetic data..."
+    echo "\n1. Generating synthetic data..."
     DATA_PATH="$REPLICATE_DIR/synthetic_data.csv"
     python run.py --task generate \
                   --data_path "$DATA_PATH" \
@@ -47,7 +47,7 @@ for ((i=1; i<=$N_REPLICATES; i++)); do
     rm temp_output.txt
     
     # Exécuter l'inférence
-    echo "Running inference..."
+    echo "\n2. Running inference..."
     python run.py --task inference \
                   --data_path "$DATA_PATH" \
                   --model_config "$MODEL_CONFIG" \
@@ -55,7 +55,7 @@ for ((i=1; i<=$N_REPLICATES; i++)); do
                   --results_dir "$REPLICATE_DIR"
     
     # Évaluer les résultats
-    echo "Evaluating results..."
+    echo "\n3. Evaluating results..."
     python run.py --task score \
                  --model_config "$MODEL_CONFIG" \
                  --results_dir "$REPLICATE_DIR" \

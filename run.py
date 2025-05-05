@@ -27,20 +27,21 @@ def generate_dataset(data_path, model, model_param = None, seed=42):
 
     if model_param is None:
         parameters = model.sample_from_prior()
-        print("\nPARAMETERS_JSON_START")
-        print(json.dumps(parameters))
-        print("PARAMETERS_JSON_END")
     else:
         parameters = model_param
+    
+    print("\nPARAMETERS_JSON_START")
+    print(json.dumps(parameters))
+    print("PARAMETERS_JSON_END")
 
     pop = model.simulate_pop(rng, list(parameters.values()))
     if pop == []:
         print("No survivors in the simulation!")
-        return 
+        return False
     if pop == "BREAK":
         print("The estimation hit the maximum size during simulation...")
         print("Estimation not saved.")
-        return
+        return False
     
     text_val = []
     witness_val = []
@@ -61,11 +62,12 @@ def generate_dataset(data_path, model, model_param = None, seed=42):
     witness_counts = list(df.groupby('text_ID')['witness_ID'].count().sort_values(ascending=False))
     s = inverse_compute_stat_witness(compute_stat_witness(witness_counts))
 
-    print("DONE!\n")
     print(f"Witness Number: {s[0]}")
     print(f"Works Number: {s[1]}")
     print(f"Max Witnesses: {s[2]}")
     print(f"Number of 1: {s[4]}")
+
+    return True
     
 
 
@@ -119,12 +121,15 @@ def main():
                         results_dir=args.results_dir
                     )
     elif args.task == 'generate':
-        generate_dataset(
-            data_path=args.data_path,
-            model=model,
-            model_param=model_param["params"],
-            seed=args.seed
-        )
+        generated = False
+        seed = args.seed
+        while not generated:
+            seed = seed*10
+            generated = generate_dataset(data_path=args.data_path,
+                                         model=model,
+                                         model_param=model_param["params"],
+                                         seed=seed
+                                        )
     elif args.task == 'score':
         if args.true_params is None:
             true_params = model_param["params"] 

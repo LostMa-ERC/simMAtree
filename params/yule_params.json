@@ -1,0 +1,14 @@
+{
+    "module_name" : "models.yule_model",
+    "class_name" : "YuleModel",
+    "n_init" : 1,
+    "Nact" : 1000,
+    "Ninact" : 1000,
+    "max_pop" : 500000,
+    "params" : {
+        "LDA" : 0.3,
+        "lda" : 0.012,
+        "gamma" : 0.001,
+        "mu" : 0.0033
+    }
+}
