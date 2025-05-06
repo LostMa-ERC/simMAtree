@@ -37,7 +37,7 @@ class PymcBackend(InferenceBackend):
             
             print(f'Number of PP samples :{len(pp_samples)}')
             print(f'Number of PP samples without survivors: {len([p for p in pp_samples if sum(p) == 0])}')
-            print(f'Number of PP samples with population > MAX: {len([p for p in pp_samples if sum(p) == 6])}')
+            print(f'Number of PP samples with population > MAX: {len([p for p in pp_samples if sum(np.all(p==1)) == 1])}')
 
         return self.results
     

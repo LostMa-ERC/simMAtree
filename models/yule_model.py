@@ -41,6 +41,18 @@ class ConstrainedUniform(Distribution):
             
         self.base_dist = Independent(Uniform(low, high), 1)
         
+        with torch.no_grad():
+            n_samples = 10000
+            
+            samples_base = self.base_dist.sample(torch.Size([n_samples]))
+            valid_mask = self._check_constraints(samples_base)
+            self.valid_proportion = torch.mean(valid_mask.float())
+            self.log_normalizing_constant = -torch.log(self.valid_proportion)
+            
+            samples = self.sample(torch.Size([n_samples]))
+            self.mean_val = torch.mean(samples, dim=0)
+            self.std_val = torch.std(samples, dim=0)
+
         # Dimension du prior est 4: [LDA, lda, gamma, mu]
         assert low.shape[-1] == 4 and high.shape[-1] == 4, "Les paramètres doivent être de dimension 4"
         
@@ -54,12 +66,20 @@ class ConstrainedUniform(Distribution):
         
     @property
     def mean(self):
-        return (self._low + self._high) / 2.0
+        return self.mean_val
         
     @property
     def stddev(self):
-        return (self._high - self._low) / (2.0 * np.sqrt(3.0))
+        return self.std_val
     
+    def log_prob(self, value):
+        base_log_prob = self.base_dist.log_prob(value)
+        valid = self._check_constraints(value)
+        
+        normalized_log_prob = base_log_prob + self.log_normalizing_constant
+
+        return torch.where(valid, normalized_log_prob, torch.tensor(-float('inf'), device=value.device))
+
     def _check_constraints(self, x):
         # Contrainte 1: lda + gamma > mu (indices 1, 2, 3)
         constraint1 = x[..., 1] + x[..., 2] > x[..., 3]
@@ -99,15 +119,6 @@ class ConstrainedUniform(Distribution):
             raise ValueError("Impossible de générer suffisamment d'échantillons valides.")
         
         return samples
-    
-    def log_prob(self, value):
-        """Calcule le log de la probabilité pour la valeur donnée"""
-        # Vérifier si la valeur est dans la boîte et respecte les contraintes
-        base_log_prob = self.base_dist.log_prob(value)
-        valid = self._check_constraints(value)
-        
-        # Si la valeur ne respecte pas les contraintes, retourner -inf
-        return torch.where(valid, base_log_prob, torch.tensor(-float('inf'), device=value.device))
 
 
 

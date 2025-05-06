@@ -28,7 +28,8 @@ echo "Model: $MODEL_TYPE"
 
 # Exécuter les réplications
 for ((i=1; i<=$N_REPLICATES; i++)); do
-    echo "=== Running replicate $i/$N_REPLICATES ==="
+    echo
+    echo "===== Running replicate $i/$N_REPLICATES ====="
     
     REPLICATE_DIR="$OUTPUT_DIR/replicate_$i"
     PARAMS_FILE="$OUTPUT_DIR/true_params_$i.json"
@@ -66,7 +67,7 @@ for ((i=1; i<=$N_REPLICATES; i++)); do
 done
 
 # Analyser les résultats
-echo "=== Aggregating results across replicates ==="
+echo "===== Aggregating results across replicates ====="
 
 # Collecter les métriques de toutes les réplications
 echo "replicate,rmse,bias,std_dev,coverage_probability" > "$OUTPUT_DIR/all_metrics.csv"
@@ -80,15 +81,37 @@ for ((i=1; i<=$N_REPLICATES; i++)); do
 done
 
 # Calculer les moyennes et écarts-types des métriques
-echo "=== Summary of evaluation metrics across all replicates ==="
+echo "===== Summary of evaluation metrics across all replicates ====="
 echo "Metric,Mean,Std,Min,Max"
 
-# Utiliser awk pour calculer les statistiques
 for METRIC in rmse bias std_dev coverage_probability; do
-    STATS=$(awk -F, -v col="$METRIC" 'NR==1 {for (i=1; i<=NF; i++) if ($i == col) col_idx=i} 
-            NR>1 {sum+=$col_idx; sumsq+=$col_idx*$col_idx; if (min=="") min=$col_idx; if (max=="") max=$col_idx; 
-            if ($col_idx < min) min=$col_idx; if ($col_idx > max) max=$col_idx} 
-            END {mean=sum/(NR-1); std=sqrt(sumsq/(NR-1) - mean*mean); printf "%s,%.6f,%.6f,%.6f,%.6f\n", col, mean, std, min, max}' "$OUTPUT_DIR/all_metrics.csv")
+    STATS=$(awk -F, -v metric="$METRIC" '
+        BEGIN { col_idx = 0 }
+        NR==1 { 
+            for (i=1; i<=NF; i++) 
+                if ($i == metric) col_idx=i 
+        }
+        NR>1 { 
+            sum += $col_idx
+            sumsq += $col_idx * $col_idx
+            if (NR == 2) {
+                min = $col_idx
+                max = $col_idx
+            } else {
+                if ($col_idx < min) min = $col_idx
+                if ($col_idx > max) max = $col_idx
+            }
+        }
+        END { 
+            if (NR > 1) {
+                mean = sum/(NR-1)
+                std = sqrt(sumsq/(NR-1) - mean*mean)
+                printf "%s,%.6f,%.6f,%.6f,%.6f\n", metric, mean, std, min, max
+            } else {
+                printf "%s,0,0,0,0\n", metric
+            }
+        }
+    ' "$OUTPUT_DIR/all_metrics.csv")
     echo "$STATS"
 done | tee "$OUTPUT_DIR/summary_statistics.csv"
 
