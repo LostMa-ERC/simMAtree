@@ -1,4 +1,5 @@
 # Bayesian Inference for Witness Analysis
+[![DOI](https://zenodo.org/badge/900725844.svg)](https://doi.org/10.5281/zenodo.15350477)
 
 ## Description
 This repository performs an Approximate Bayesian Computation algorithm on witness distribution data modeled by a Yule process, using PyMC library. 
