@@ -198,3 +198,7 @@ For multiple replicates and comprehensive evaluation:
 ```bash
 ./eval_on_sim.sh params/birth_death_poisson.json params/sbi_config.json results/evaluation/ 10
 ```
+
+## Acknowledgements
+
+Funded by the European Union (ERC, LostMA, 101117408). Views and opinions expressed are however those of the author(s) only and do not necessarily reflect those of the European Union or the European Research Council. Neither the European Union nor the granting authority can be held responsible for them.
