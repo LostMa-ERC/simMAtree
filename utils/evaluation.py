@@ -47,6 +47,27 @@ def evaluate_inference(true_params, results_dir, param_names=None):
     errors = hpdi_point - true_params
     squared_errors = errors**2
     
+    # Calculer la coverage probability
+    # Charger les échantillons postérieurs
+    try:
+        posterior_samples = np.load(f"{results_dir}/posterior_samples.npy")
+        
+        # Calculer les bornes HPDI à 95%
+        # Trions les échantillons par densité décroissante (normalement déjà fait pour HPDI)
+        coverage = []
+        
+        for i, true_val in enumerate(true_params):
+            # Calculer les quantiles 2.5% et 97.5% pour une approximation simple de l'HPDI
+            lower, upper = np.percentile(posterior_samples[:, i], [2.5, 97.5])
+            in_interval = (true_val >= lower) and (true_val <= upper)
+            coverage.append(in_interval)
+        
+        coverage_prob = np.mean(coverage)
+        coverage_by_param = coverage
+    except:
+        coverage_prob = np.nan
+        coverage_by_param = [np.nan] * len(true_params)
+
     param_metrics = {}
     for i, (name, true_val) in enumerate(zip(param_names, true_params)):
         # Erreur absolue
@@ -80,27 +101,7 @@ def evaluate_inference(true_params, results_dir, param_names=None):
         "mean_rel_error_pct": mean_rel_error,
         "coverage_probability": coverage_prob
     }
-    
-    # Calculer la coverage probability
-    # Charger les échantillons postérieurs
-    try:
-        posterior_samples = np.load(f"{results_dir}/posterior_samples.npy")
-        
-        # Calculer les bornes HPDI à 95%
-        # Trions les échantillons par densité décroissante (normalement déjà fait pour HPDI)
-        coverage = []
-        
-        for i, true_val in enumerate(true_params):
-            # Calculer les quantiles 2.5% et 97.5% pour une approximation simple de l'HPDI
-            lower, upper = np.percentile(posterior_samples[:, i], [2.5, 97.5])
-            in_interval = (true_val >= lower) and (true_val <= upper)
-            coverage.append(in_interval)
-        
-        coverage_prob = np.mean(coverage)
-        coverage_by_param = coverage
-    except:
-        coverage_prob = np.nan
-        coverage_by_param = [np.nan] * len(true_params)
+
 
     
     # Créer un rapport
