@@ -72,7 +72,7 @@ echo "===== Aggregating results across replicates ====="
 # Collecter les métriques de toutes les réplications
 echo "replicate,rmse,bias,std_dev,coverage_probability" > "$OUTPUT_DIR/all_metrics.csv"
 for ((i=1; i<=$N_REPLICATES; i++)); do
-    METRICS_FILE="$OUTPUT_DIR/replicate_$i/evaluation/summary_metrics.csv"
+    METRICS_FILE="$OUTPUT_DIR/replicate_$i/summary_metrics.csv"
     if [ -f "$METRICS_FILE" ]; then
         # Extraire les valeurs et ajouter le numéro de réplication
         METRICS=$(tail -n 1 "$METRICS_FILE")

@@ -4,15 +4,13 @@ import torch
 import matplotlib.pyplot as plt
 import pandas as pd
 import sbi.inference
-import xarray as xr
-from tqdm import tqdm
 
 
 from sbi.inference import simulate_for_sbi
 from sbi.utils.user_input_checks import check_sbi_inputs, process_simulator
 from sbi.analysis import pairplot
 from inference.base_backend import InferenceBackend
-from utils.visualisation import plot_posterior_predictive_stats, plot_marginal_posterior, plot_sbi_pairplot, compute_hpdi_point
+from utils.visualisation import compute_hpdi_point
 
 class SbiBackend(InferenceBackend):
     def __init__(self, config_file):
@@ -108,6 +106,7 @@ class SbiBackend(InferenceBackend):
         samples = self.results['posterior_samples']
 
         np.save(f"{output_dir}/posterior_samples.npy", samples)
+        np.save(f"{output_dir}/obs_values.npy", obs_values)
         np.save(f"{output_dir}/posterior_predictive.npy", self.results['posterior_predictive'])
         
         # Calculate summary statistics
@@ -122,18 +121,7 @@ class SbiBackend(InferenceBackend):
         
         # Create summary DataFrame
         summary_df = pd.DataFrame(summary_stats)
-        summary_df.to_csv(f"{output_dir}/results_summary.csv")
-        
-        pp_samples_xr = xr.DataArray(
-            self.results['posterior_predictive'],
-            dims=["sample", "stat"]
-        )
-        plot_posterior_predictive_stats(
-            pp_samples_xr,
-            obs_values,
-            output_dir
-        )
-        plot_sbi_pairplot(samples, output_dir)
-        plot_marginal_posterior(samples, output_dir)
+        summary_df.to_csv(f"{output_dir}/posterior_summary.csv")
+
 
         

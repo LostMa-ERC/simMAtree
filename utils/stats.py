@@ -51,3 +51,27 @@ def inverse_compute_stat_witness(stats):
     
     return [nb_temoins, nb_oeuvre, max_wit, med_wit, nb_one]
 
+def compute_hist_stats(witness_nb, max_bins=200):
+    """
+    Compute complete histogram of witness distribution.
+    """
+    if not witness_nb:
+        return np.zeros(max_bins)
+    elif witness_nb == "BREAK":
+        return np.ones(max_bins)
+    
+    witness_nb = np.array(witness_nb, dtype=np.float64)
+    
+    # Calculer l'histogramme
+    max_count = min(int(np.max(witness_nb)), max_bins)
+    hist = np.zeros(max_bins)
+    
+    # Remplir l'histogramme
+    for i in range(1, max_count + 1):
+        hist[i-1] = np.sum(witness_nb == i)
+    
+    # Normaliser pour éviter les problèmes d'échelle
+    hist = hist / np.sum(witness_nb)
+    
+    return hist
+

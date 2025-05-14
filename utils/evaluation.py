@@ -5,6 +5,9 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 from pathlib import Path
 
+import xarray as xr
+from utils.visualisation import plot_posterior_predictive_stats, plot_marginal_posterior, plot_combined_hpdi
+
 def evaluate_inference(true_params, results_dir, param_names=None):
     """
     Évalue les performances d'inférence en comparant les valeurs HPDI avec les vrais paramètres.
@@ -23,7 +26,6 @@ def evaluate_inference(true_params, results_dir, param_names=None):
     dict
         Dictionnaire contenant les métriques d'évaluation
     """
-    # Convertir true_params en liste si c'est un dictionnaire
     if isinstance(true_params, dict):
         if param_names is None:
             param_names = list(true_params.keys())
@@ -36,10 +38,17 @@ def evaluate_inference(true_params, results_dir, param_names=None):
     try:
         results_summary = pd.read_csv(f"{results_dir}/results_summary.csv")
         hpdi_values = results_summary['hpdi_95%']
+        posterior_mean = results_summary['mean']
         
     except (FileNotFoundError, KeyError):
         print(f"Erreur: Impossible de trouver les valeurs HPDI dans {results_dir}/results_summary.csv")
         return None
+    
+    try:
+        obs_values = pd.read_csv(f"{results_dir}/obs_values.npy")
+        
+    except:
+        obs_values = None
     
     hpdi_point = np.array(hpdi_values)
     true_params = np.array(true_params)
@@ -51,16 +60,21 @@ def evaluate_inference(true_params, results_dir, param_names=None):
     # Charger les échantillons postérieurs
     try:
         posterior_samples = np.load(f"{results_dir}/posterior_samples.npy")
+        posterior_pred_samples = np.load(f"{results_dir}/posterior_predictive.npy")
+        pp_samples_xr = xr.DataArray(posterior_pred_samples,
+                                    dims=["sample", "stat"])
         
         # Calculer les bornes HPDI à 95%
         # Trions les échantillons par densité décroissante (normalement déjà fait pour HPDI)
         coverage = []
-        
+        hpdi_interval = []
+
         for i, true_val in enumerate(true_params):
             # Calculer les quantiles 2.5% et 97.5% pour une approximation simple de l'HPDI
             lower, upper = np.percentile(posterior_samples[:, i], [2.5, 97.5])
             in_interval = (true_val >= lower) and (true_val <= upper)
             coverage.append(in_interval)
+            hpdi_interval.append((lower, upper))
         
         coverage_prob = np.mean(coverage)
         coverage_by_param = coverage
@@ -80,15 +94,15 @@ def evaluate_inference(true_params, results_dir, param_names=None):
         param_metrics[name] = {
             "true_value": true_val,
             "hpdi_point": hpdi_point[i],
-            "abs_error": abs_error,
+            "post. mean": posterior_mean[i],
             "rel_error_pct": rel_error,
             "norm_squared_error": norm_squared_error,
             "bias": errors[i],
+            "hpdi_interval": hpdi_interval[i],
             "in_hpdi_95": coverage_by_param[i]
         }
 
     # Calculer les métriques agrégées basées sur les erreurs relatives
-    mean_abs_error = np.mean([m["abs_error"] for m in param_metrics.values()])
     mean_rel_error = np.mean([m["rel_error_pct"] for m in param_metrics.values() if m["rel_error_pct"] != float('inf')])
     rmse = np.sqrt(np.mean(squared_errors))  # Conserver RMSE original
     nrmse = np.sqrt(np.mean([m["norm_squared_error"] for m in param_metrics.values() if m["norm_squared_error"] != float('inf')]))
@@ -97,46 +111,17 @@ def evaluate_inference(true_params, results_dir, param_names=None):
     summary = {
         "rmse": rmse,
         "nrmse": nrmse,  # RMSE normalisé
-        "mean_abs_error": mean_abs_error,
         "mean_rel_error_pct": mean_rel_error,
         "coverage_probability": coverage_prob
     }
-
-
     
     # Créer un rapport
-    if not Path(f"{results_dir}/evaluation").exists():
-        Path(f"{results_dir}/evaluation").mkdir(parents=True)
+    if not Path(f"{results_dir}").exists():
+        Path(f"{results_dir}").mkdir(parents=True)
     
     # Sauvegarder les métriques
-    pd.DataFrame([summary]).to_csv(f"{results_dir}/evaluation/summary_metrics.csv", index=False)
-    
-    # Créer un graphique de comparaison
-    plt.figure(figsize=(10, 6))
-    x = np.arange(len(param_names))
-    width = 0.35
-    
-    plt.bar(x - width/2, true_params, width, label='True Values')
-    plt.bar(x + width/2, hpdi_point, width, label='HPDI Point')
-    
-    plt.xlabel('Parameters')
-    plt.ylabel('Values')
-    plt.title('Comparison of True Parameters vs HPDI Point Estimates')
-    plt.xticks(x, param_names)
-    plt.legend()
-    
-    plt.tight_layout()
-    plt.savefig(f"{results_dir}/evaluation/param_comparison.png")
-    plt.close()
-    
-    # Créer un graphique de barres pour le biais
-    plt.figure(figsize=(10, 6))
-    plt.bar(param_names, errors)
-    plt.axhline(y=0, color='r', linestyle='-')
-    plt.xlabel('Parameters')
-    plt.ylabel('Bias')
-    plt.title('Bias of HPDI Point Estimates')
-        
+    pd.DataFrame([summary]).to_csv(f"{results_dir}/summary_metrics.csv", index=False)
+
     plt.figure(figsize=(10, 6))
     rel_errors = [param_metrics[name]["rel_error_pct"] for name in param_names if param_metrics[name]["rel_error_pct"] != float('inf')]
     rel_error_names = [name for name in param_names if param_metrics[name]["rel_error_pct"] != float('inf')]
@@ -146,11 +131,26 @@ def evaluate_inference(true_params, results_dir, param_names=None):
     plt.ylabel('Relative Error (%)')
     plt.title('Relative Error of HPDI Point Estimates')
     plt.tight_layout()
-    plt.savefig(f"{results_dir}/evaluation/relative_error.png")
+    plt.savefig(f"{results_dir}/relative_error.png")
     plt.close()
+
+
+    plot_posterior_predictive_stats(
+        pp_samples_xr,
+        obs_value = obs_values,
+        output_dir = results_dir
+    )
+
+    plot_combined_hpdi(
+        [posterior_samples], 
+        output_dir = results_dir, 
+        true_values = true_params
+    )
     
-    plt.tight_layout()
-    plt.savefig(f"{results_dir}/evaluation/bias.png")
-    plt.close()
+    plot_marginal_posterior(
+        posterior_samples, 
+        output_dir = results_dir
+    )
     
     return summary, param_metrics
+
