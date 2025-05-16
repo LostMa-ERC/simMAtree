@@ -1,0 +1,2 @@
+def generate():
+    print("generate")

@@ -1,0 +1,2 @@
+def score():
+    print("score")

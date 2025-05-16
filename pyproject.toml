@@ -1,0 +1,40 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "bayes-yule"
+version = "2025.5.16"
+dependencies = [
+    "pandas (>=2.2.3,<3.0.0)",
+    "pymc (>=5.22.0,<6.0.0)",
+    "arviz (>=0.21.0,<0.22.0)",
+    "torch (>=2.7.0,<3.0.0)",
+    "sbi (==0.23.3)",
+    "rich (>=14.0.0,<15.0.0)",
+    "click (>=8.2.0,<9.0.0)",
+    "numpy (==1.26.4)"
+]
+requires-python = ">=3.12,<3.14"
+authors = [
+  {name = "Théo Moins"},
+]
+description = "Bayes Yule"
+readme = "README.md"
+license = "MIT"
+keywords = []
+
+[project.optional-dependencies]
+gui = ["PyQt5"]
+dev = [
+  "pytest",
+]
+
+[tool.hatch.build.targets.wheel]
+      packages = ["src"]
+
+[project.urls]
+Repository = "https://github.com/LostMa-ERC/BayesYule.git"
+
+[project.scripts]
+yule = "src.__main__:cli"
