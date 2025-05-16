@@ -232,7 +232,7 @@ def plot_combined_hpdi(samples_list, output_dir, dataset_names=None, true_values
     plt.savefig(output_dir+"/pairplot", dpi=300, bbox_inches='tight')
 
 
-def plot_marginal_posterior(samples, output_dir, hpdi_point=None):
+def plot_marginal_posterior(samples, output_dir, hpdi_point=None, true_value=None):
     summary_stats = {
         'mean': np.mean(samples, axis=0),
         'std': np.std(samples, axis=0),
@@ -256,6 +256,9 @@ def plot_marginal_posterior(samples, output_dir, hpdi_point=None):
             if hpdi_point is not None:
                 ax.axvline(hpdi_point[i], color='purple', linestyle='-.',
                           linewidth=2, label='HPDI 95%')
+            if true_value is not None:
+                ax.axvline(true_value[i], color='black', linestyle='--',
+                          linewidth=3, label='True Value')
                 
             if i == 0:
                 ax.legend()

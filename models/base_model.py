@@ -14,6 +14,17 @@ class BaseModel:
     def get_simulator(self):
         """Définit et retourne les priors du modèle"""
         pass
+
+    def validate_params(self, params):
+        """Valide et corrige si nécessaire les paramètres avant simulation
+        
+        Args:
+            params: Les paramètres à valider
+            
+        Returns:
+            Les paramètres validés/corrigés
+        """
+        return params
     
     def get_pymc_priors(self, model=None):
         #TODO : Faire une fonction get_prior global qui utilise soit pymc, soit sbi en fonction d'un argument ? 

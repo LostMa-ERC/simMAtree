@@ -31,8 +31,12 @@ class SbiBackend(InferenceBackend):
         
         # Define simulator wrapper
         def sbi_simulator_wrapper(params):
-            result = model.get_simulator(self.rng, params)
-            return torch.tensor(result, dtype=torch.float32)
+            try:
+                validated_params = model.validate_params(params)
+                result = model.get_simulator(self.rng, validated_params)
+                return torch.tensor(result, dtype=torch.float32)
+            except ValueError:
+                return torch.zeros(13, dtype=torch.float32)
         
         # Process simulator for SBI
         simulator = process_simulator(sbi_simulator_wrapper, prior, False)
@@ -62,7 +66,10 @@ class SbiBackend(InferenceBackend):
             break_counter = torch.sum(torch.all(x == 1, dim=1)).item()
             print(f"\n{zero_counter} zero occurrences out of {num_simulations} simulations ({zero_counter/num_simulations*100:.2f}%)")
             print(f"{break_counter} BREAK occurrences out of {num_simulations} simulations ({break_counter/num_simulations*100:.2f}%)\n")
-            density_estimator = inference.append_simulations(params, x, proposal=proposal).train()
+            if num_rounds == 1:
+                density_estimator = inference.append_simulations(params, x).train()
+            else:
+                density_estimator = inference.append_simulations(params, x, proposal=proposal).train()
             posterior = inference.build_posterior(density_estimator)
             posteriors.append(posterior)
             proposal = posterior.set_default_x(x_o)

@@ -36,16 +36,16 @@ def evaluate_inference(true_params, results_dir, param_names=None):
     
     # Charger le résumé des résultats qui contient hpdi_point
     try:
-        results_summary = pd.read_csv(f"{results_dir}/results_summary.csv")
+        results_summary = pd.read_csv(f"{results_dir}/posterior_summary.csv")
         hpdi_values = results_summary['hpdi_95%']
         posterior_mean = results_summary['mean']
         
     except (FileNotFoundError, KeyError):
-        print(f"Erreur: Impossible de trouver les valeurs HPDI dans {results_dir}/results_summary.csv")
+        print(f"Erreur: Impossible de trouver les valeurs HPDI dans {results_dir}/posterior_summary.csv")
         return None
     
     try:
-        obs_values = pd.read_csv(f"{results_dir}/obs_values.npy")
+        obs_values = np.load(f"{results_dir}/obs_values.npy")
         
     except:
         obs_values = None
@@ -126,14 +126,12 @@ def evaluate_inference(true_params, results_dir, param_names=None):
     rel_errors = [param_metrics[name]["rel_error_pct"] for name in param_names if param_metrics[name]["rel_error_pct"] != float('inf')]
     rel_error_names = [name for name in param_names if param_metrics[name]["rel_error_pct"] != float('inf')]
     plt.bar(rel_error_names, rel_errors)
-    plt.axhline(y=0, color='r', linestyle='-')
     plt.xlabel('Parameters')
     plt.ylabel('Relative Error (%)')
     plt.title('Relative Error of HPDI Point Estimates')
     plt.tight_layout()
     plt.savefig(f"{results_dir}/relative_error.png")
     plt.close()
-
 
     plot_posterior_predictive_stats(
         pp_samples_xr,
@@ -149,7 +147,8 @@ def evaluate_inference(true_params, results_dir, param_names=None):
     
     plot_marginal_posterior(
         posterior_samples, 
-        output_dir = results_dir
+        output_dir = results_dir,
+        true_value = true_params
     )
     
     return summary, param_metrics

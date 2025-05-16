@@ -38,7 +38,10 @@ class ConstrainedUniform(Distribution):
             high = torch.tensor(high, dtype=torch.float32, device=device)
         else:
             high = high.to(device)
-            
+        
+        self._low = low
+        self._high = high
+
         self.base_dist = Independent(Uniform(low, high), 1)
         
         with torch.no_grad():
@@ -132,6 +135,22 @@ class YuleModel(BaseModel):
         self.Ninact = hyperparams["Ninact"]
         self.max_pop = hyperparams["max_pop"]
 
+    def validate_params(self, params):
+        """Valide les paramètres pour le modèle Yule"""
+        try:
+            LDA, lda, gamma, mu = self.process_params(params)
+            
+            if LDA < 0 or np.isnan(LDA) or lda < 0 or np.isnan(lda) or gamma < 0 or np.isnan(gamma) or mu < 0 or np.isnan(mu):
+                raise ValueError("Paramètres invalides détectés")
+            
+            if not (lda + gamma > mu and gamma < lda):
+                raise ValueError("Contraintes du modèle non respectées")
+                
+            return params
+        except ValueError:
+            raise
+
+
     def get_pymc_priors(self, model):
         with model:
             LDA = pm.Uniform('LDA', lower=0, upper=0.05)
@@ -143,7 +162,7 @@ class YuleModel(BaseModel):
     def get_sbi_priors(self, device='cpu'):
         # LDA, lda, gamma, mu
         lower_bounds = torch.tensor([0.0, 0.0, 0.0, 0.0], device=device) 
-        upper_bounds = torch.tensor([1, 0.015, 0.01, 0.01], device=device)  
+        upper_bounds = torch.tensor([2, 0.015, 0.01, 0.01], device=device)  
 
         prior = ConstrainedUniform(lower_bounds, upper_bounds, device=device)
         prior, num_parameters, prior_returns_numpy = process_prior(prior)
@@ -247,9 +266,6 @@ class YuleModel(BaseModel):
     def get_simulator(self, rng, params,  additional_stats = True, size=None):
         witness_nb = self.simulate_pop(rng, params)        
         stats = compute_stat_witness(witness_nb, additional_stats)
-
-        if not np.all(np.isfinite(stats)):
-            return np.zeros(6)
 
         return stats
 

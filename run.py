@@ -120,6 +120,7 @@ def main():
                         backend=backend,
                         results_dir=args.results_dir
                     )
+
     elif args.task == 'generate':
         generated = False
         seed = args.seed
