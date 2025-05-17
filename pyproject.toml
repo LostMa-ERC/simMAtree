@@ -8,9 +8,11 @@ version = "2025.5.16"
 dependencies = [
     "pandas (>=2.2.3,<3.0.0)",
     "pymc (>=5.22.0,<6.0.0)",
+    "pyaml (>=25.1.0)",
     "arviz (>=0.21.0,<0.22.0)",
     "torch (>=2.7.0,<3.0.0)",
     "sbi (==0.23.3)",
+    "seaborn (>=0.13.2)",
     "rich (>=14.0.0,<15.0.0)",
     "click (>=8.2.0,<9.0.0)",
     "numpy (==1.26.4)"
@@ -27,7 +29,9 @@ keywords = []
 [project.optional-dependencies]
 gui = ["PyQt5"]
 dev = [
+  "isort",
   "pytest",
+  "ruff",
 ]
 
 [tool.hatch.build.targets.wheel]
@@ -37,4 +41,4 @@ dev = [
 Repository = "https://github.com/LostMa-ERC/BayesYule.git"
 
 [project.scripts]
-yule = "src.__main__:cli"
+bule = "src.__main__:cli"
