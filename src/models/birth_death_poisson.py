@@ -1,51 +1,50 @@
 import numpy as np
 import pymc as pm
-import json
 
-from utils.stats import compute_stat_witness
-
-from models.base_model import BaseModel
+from src.models.base_model import BaseModel
+from src.utils.stats import compute_stat_witness
 
 
 class BirthDeathPoisson(BaseModel):
-    def __init__(self, hyperparams_file):
-        with open(hyperparams_file) as f:
-            hyperparams = json.load(f)
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
 
-        self.n_init = hyperparams["n_init"]
-        self.Nact = hyperparams["Nact"]
-        self.Ninact = hyperparams["Ninact"]
-        self.max_pop = hyperparams["max_pop"]
-    
     def simulate_pop(self, rng, params):
         """
         Generate a Yule population
         """
-        
+
         LDA = params[0]
         lda = params[1]
         mu = params[2]
 
-        species_count = {i: 1 for i in range(self.n_init)} if self.n_init > 0 else {}
+        if self.n_init > 0:
+            species_counter = {i: 1 for i in range(self.n_init)}
+        else:
+            species_counter = {}
+
         next_species_id = self.n_init
-        
+
         t = 0
-        total_pop = sum(species_count.values())
-        
+        total_pop = sum(species_counter.values())
+
         while t < self.Nact and total_pop <= self.max_pop:
-            n_new_trees = rng.poisson(lam=LDA) if total_pop < self.max_pop else 0
-            
+            if total_pop < self.max_pop:
+                n_new_trees = rng.poisson(lam=LDA)
+            else:
+                n_new_trees = 0
+
             if n_new_trees:
                 next_species_id += 1
-                species_count[next_species_id] = 1
+                species_counter[next_species_id] = 1
                 total_pop += 1
-            
-            new_species_count = species_count.copy()
-            
-            for species, count in species_count.items():
+
+            new_species_count = species_counter.copy()
+
+            for species, count in species_counter.items():
                 if count == 0:
                     continue
-                
+
                 if total_pop < self.max_pop:
                     # Copie simple
                     n_copies = rng.binomial(count, lda)
@@ -57,28 +56,34 @@ class BirthDeathPoisson(BaseModel):
                 # Mort
                 n_deaths = rng.binomial(count, mu)
                 if n_deaths:
-                    new_species_count[species] = max(0, new_species_count[species] - n_deaths)
+                    new_species_count[species] = max(
+                        0, new_species_count[species] - n_deaths
+                    )
                     total_pop -= min(n_deaths, new_species_count[species])
 
             # Nettoyage des espèces éteintes
-            species_count = {k: v for k, v in new_species_count.items() if v > 0}
-            if not species_count:
+            nsc = new_species_count
+            species_counter = {k: v for k, v in nsc.items() if v > 0}
+            if not species_counter:
                 return []
-            
-            total_pop = sum(species_count.values())
+
+            total_pop = sum(species_counter.values())
             t += 1
-        
+
         # Phase de décimation optimisée
         survival_rate = (1 - mu) ** self.Ninact
-        
+
         # Application directe du taux de survie
         final_species_count = {}
-        for species, count in species_count.items():
+        for species, count in species_counter.items():
             n_survivors = rng.binomial(count, survival_rate)
             if n_survivors > 0:
                 final_species_count[species] = n_survivors
-        
-        return list(final_species_count.values()) if final_species_count else []
+
+        if final_species_count is not None:
+            return list(final_species_count.values())
+        else:
+            return []
 
     def get_simulator(self, rng, params, size=None):
 
@@ -94,21 +99,18 @@ class BirthDeathPoisson(BaseModel):
             print(f"Error in simulate_tree_stats: {e}")
             print()
             return np.zeros(6)
-    
 
     def get_pymc_priors(self, model):
         with model:
-            LDA = pm.Gamma('LDA', alpha=1, beta=1)
-            lda = pm.Uniform('lda', lower=0, upper=0.05)
-            mu = pm.Uniform('mu', lower=0, upper=0.01)
+            LDA = pm.Gamma("LDA", alpha=1, beta=1)
+            lda = pm.Uniform("lda", lower=0, upper=0.05)
+            mu = pm.Uniform("mu", lower=0, upper=0.01)
         return LDA, lda, mu
-    
+
     def get_constraints(self, model, params):
         LDA, lda, mu = params
         with model:
-            constraints = pm.Potential('constraints',
-                pm.math.switch((lda > mu), 0, -np.inf))
+            constraints = pm.Potential(
+                "constraints", pm.math.switch((lda > mu), 0, -np.inf)
+            )
         return constraints
-    
-    
-

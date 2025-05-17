@@ -1,0 +1,25 @@
+model:
+  module : models.yule_model
+  class : YuleModel
+  config:
+    n_init : 1
+    Nact : 1000
+    Ninact : 1000
+    max_pop : 10 # Set very low for testing
+  params:
+    LDA: 0.3
+    lda: 0.012
+    gamma: 0.001
+    mu: 0.0033
+
+
+inference:
+  module : inference.pymc_backend
+  class : PymcBackend
+  config:
+    draws : 5
+    chains : 4
+    random_seed : 42
+    epsilon : 1
+    sum_stat : identity
+    distance : gaussian
