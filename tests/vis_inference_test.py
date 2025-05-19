@@ -25,7 +25,7 @@ class PymcVisTest(unittest.TestCase):
         )
 
     def test_predictive_stats(self):
-        # Known AttributeError in plot_posterior_predictive_stats
+        # TODO: Known AttributeError in plot_posterior_predictive_stats
         with pytest.raises(AttributeError):
             visualisation.plot_posterior_predictive_stats(
                 samples=self.data,

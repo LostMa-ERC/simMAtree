@@ -1,16 +1,16 @@
 from pathlib import Path
 
 from src.utils.evaluation import evaluate_inference
-from src.utils.model_param_type import ModelParam
+from src.config.types import ExperimentParamters
 
 
-def score(true_params: ModelParam, results_dir: str):
+def score(true_params: ExperimentParamters, results_dir: str):
     dir = Path(results_dir)
     dir.mkdir(exist_ok=True)
 
     # Déterminer les noms de paramètres en fonction du modèle
-    param_names = true_params.list_names()
-    param_dict = true_params.to_dict()
+    param_dict = true_params.model_dump()
+    param_names = list(param_dict.keys())
 
     # Exécuter l'évaluation
     summary, param_summary = evaluate_inference(

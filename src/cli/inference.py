@@ -56,7 +56,7 @@ def inference(
             dir,
         )
     except Exception as e:
-        # Predictive stats isn't currently working.
+        # TODO: Predictive stats isn't working.
         # See tests/vis_inference_test.py
         raise e("This is a known error. See tests/vis_inference_test.py")
 

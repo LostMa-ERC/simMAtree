@@ -2,23 +2,42 @@ from pathlib import Path
 
 import click
 
-from src.cli.config_parser import Config
+from src.config.parser import Config
 from src.cli.generate import generate
 from src.cli.inference import inference
 from src.cli.score import score
 
 
 @click.group
-@click.option("-c", "--config")
+@click.option(
+    "-c",
+    "--config",
+    type=click.Path(exists=True, file_okay=True, dir_okay=False, readable=True),
+)
 @click.pass_context
 def cli(ctx, config):
     ctx.obj = Config(config)
 
 
+@click.command
+def test_installation():
+    print("Looks good!")
+
+
 @cli.command("infer")
-@click.option("-i", "--infile", required=True)
-@click.option("-o", "--outdir", required=True)
-@click.option("-s", "--separator", required=False, default=";")
+@click.option(
+    "-i",
+    "--infile",
+    required=True,
+    type=click.Path(exists=True, readable=True, file_okay=True, dir_okay=False),
+)
+@click.option(
+    "-o",
+    "--outdir",
+    required=True,
+    type=click.Path(exists=True, writable=True, file_okay=False, dir_okay=True),
+)
+@click.option("-s", "--separator", required=False, default=";", type=click.STRING)
 @click.pass_obj
 def infer_command(config: Config, infile: str, outdir: str, separator: str):
     model = config.parse_model_config()
@@ -35,19 +54,29 @@ def infer_command(config: Config, infile: str, outdir: str, separator: str):
 
 
 @cli.command("generate")
-@click.option("-i", "--infile", required=True)
+@click.option(
+    "-o",
+    "--outfile",
+    required=True,
+    type=click.Path(exists=True, file_okay=True, dir_okay=False, writable=True),
+)
 @click.pass_obj
-def generate_command(config: Config, infile: str):
+def generate_command(config: Config, outfile: str):
     model = config.parse_model_config()
-    generate(data_path=infile, model=model)
+    generate(data_path=outfile, model=model)
 
 
 @cli.command("score")
-@click.option("-o", "--outdir", required=True)
+@click.option(
+    "-d",
+    "--directory",
+    required=True,
+    type=click.Path(exists=True, file_okay=False, dir_okay=True),
+)
 @click.pass_obj
-def score_command(config: Config, outdir: str):
+def score_command(config: Config, directory: str):
     true_params = config.parse_experiment_parameters()
-    score(true_params=true_params, results_dir=outdir)
+    score(true_params=true_params, results_dir=directory)
 
 
 if __name__ == "__main__":

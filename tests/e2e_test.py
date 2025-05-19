@@ -3,7 +3,7 @@ from pathlib import Path
 
 import pytest
 
-from src.cli.config_parser import Config
+from src.config.parser import Config
 from src.cli.generate import generate
 from src.cli.inference import inference
 
@@ -21,13 +21,12 @@ class End2EndYuleTest(unittest.TestCase):
         return super().setUp()
 
     def test_generate(self):
-        model = self.config.parse_model_config()
-        generate(data_path=SIMULATION_DATA, model=model)
+        generate(data_path=SIMULATION_DATA, model=self.config.model)
 
     def test_infererence(self):
-        model = self.config.parse_model_config()
-        backend = self.config.parse_backend_config()
-        # Known TypeError in plot_posterior_predictive_stats
+        model = self.config.model
+        backend = self.config.backend
+        # TODO: Known TypeError in plot_posterior_predictive_stats
         with pytest.raises(TypeError):
             inference(
                 csv_file=SIMULATION_DATA,
