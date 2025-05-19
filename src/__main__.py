@@ -35,13 +35,13 @@ def test_installation():
     "-o",
     "--outdir",
     required=True,
-    type=click.Path(exists=True, writable=True, file_okay=False, dir_okay=True),
+    type=click.Path(file_okay=False, dir_okay=True),
 )
 @click.option("-s", "--separator", required=False, default=";", type=click.STRING)
 @click.pass_obj
 def infer_command(config: Config, infile: str, outdir: str, separator: str):
-    model = config.parse_model_config()
-    backend = config.parse_backend_config()
+    model = config.model
+    backend = config.backend
     dir = Path(outdir)
     dir.mkdir(exist_ok=True)
     inference(
@@ -58,11 +58,11 @@ def infer_command(config: Config, infile: str, outdir: str, separator: str):
     "-o",
     "--outfile",
     required=True,
-    type=click.Path(exists=True, file_okay=True, dir_okay=False, writable=True),
+    type=click.Path(file_okay=True, dir_okay=False, writable=True),
 )
 @click.pass_obj
 def generate_command(config: Config, outfile: str):
-    model = config.parse_model_config()
+    model = config.model
     generate(data_path=outfile, model=model)
 
 
