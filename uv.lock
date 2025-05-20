@@ -1896,6 +1896,7 @@ dependencies = [
     { name = "pymc" },
     { name = "rich" },
     { name = "sbi" },
+    { name = "scipy" },
     { name = "seaborn" },
     { name = "torch" },
 ]
@@ -1920,6 +1921,7 @@ requires-dist = [
     { name = "pymc", specifier = ">=5.22.0,<6.0.0" },
     { name = "rich", specifier = ">=14.0.0,<15.0.0" },
     { name = "sbi", specifier = "==0.23.3" },
+    { name = "scipy", specifier = ">=1.12.0" },
     { name = "seaborn", specifier = ">=0.13.2" },
     { name = "torch", specifier = ">=2.7.0,<3.0.0" },
 ]

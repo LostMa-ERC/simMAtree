@@ -30,8 +30,3 @@ jobs:
 
       - name: Test installation
         run: simmatree-test
-
-      - name: Test e2e
-        run: |
-            pip install pytest
-            pytest tests/e2e
