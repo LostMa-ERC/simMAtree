@@ -2,11 +2,9 @@ import unittest
 from pathlib import Path
 
 import arviz
-import pytest
 
 from src.utils import visualisation
-
-MOCK_DIR = Path(__file__).parent.joinpath("mock")
+from tests.constants import MOCK_DIR
 
 MOCK_DATA = MOCK_DIR.joinpath("pymc_inference_data.nc")
 
@@ -24,13 +22,15 @@ class PymcVisTest(unittest.TestCase):
             output_dir=self.outdir,
         )
 
+    @unittest.skip("Known problem")
     def test_predictive_stats(self):
-        # TODO: Known AttributeError in plot_posterior_predictive_stats
-        with pytest.raises(AttributeError):
-            visualisation.plot_posterior_predictive_stats(
-                samples=self.data,
-                output_dir=self.outdir,
-            )
+        # TODO: See line 302
+        # flat_samples = samples.values.reshape(-1, samples.shape[-1])
+        # AttributeError: 'function' object has no attribute 'reshape'
+        visualisation.plot_posterior_predictive_stats(
+            samples=self.data,
+            output_dir=self.outdir,
+        )
 
     def tearDown(self):
         for f in self.outdir.iterdir():

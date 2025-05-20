@@ -2,10 +2,10 @@ from pathlib import Path
 
 import click
 
-from src.config.parser import Config
 from src.cli.generate import generate
 from src.cli.inference import inference
 from src.cli.score import score
+from src.config.parser import Config
 
 
 @click.group

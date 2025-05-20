@@ -1,6 +1,6 @@
 from enum import Enum
 
-from .types import ModelImports
+from .constants import ModelImports
 
 
 class InvalidConfigValue(Exception):
