@@ -1,1 +1,3 @@
-from src.inference.base_backend import AbstractInferenceClass as AbstractInferenceClass
+from src.inference.base_backend import (
+    AbstractInferenceClass as AbstractInferenceClass,
+)

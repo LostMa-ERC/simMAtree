@@ -1,8 +1,8 @@
 from abc import ABC, abstractmethod
 
+import numpy as np
 import pymc as pm
 import torch
-import numpy as np
 
 from src.models.constants import PyMCPriors
 

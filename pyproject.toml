@@ -53,3 +53,8 @@ Repository = "https://github.com/LostMa-ERC/BayesYule.git"
 [project.scripts]
 simetree = "src.__main__:cli"
 simetree-test = "src.__main__:test_installation"
+
+[tool.isort]
+profile = "black"
+line_length = 79
+src_paths = ["src", "tests"]

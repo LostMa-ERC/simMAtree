@@ -74,13 +74,12 @@ class PymcBackend(AbstractInferenceClass):
                 f"Number of PP samples without survivors: {len([p for p in pp_samples if sum(p) == 0])}"
             )
             print(
-                f"Number of PP samples with population > MAX: {len([p for p in pp_samples if sum(np.all(p==1)) == 1])}"
+                f"Number of PP samples with population > MAX: {len([p for p in pp_samples if sum(np.all(p == 1)) == 1])}"
             )
 
         return self.results
 
     def save_results(self, observed_values, output_dir):
-
         if self.results is None:
             print("Inference needs to be done before saving the results")
 
