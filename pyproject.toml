@@ -3,7 +3,7 @@ requires = ["hatchling"]
 build-backend = "hatchling.build"
 
 [project]
-name = "lostma-simetree"
+name = "lostma-simMAtree"
 version = "2025.5.16"
 dependencies = [
     "pandas (>=2.2.3,<3.0.0)",
@@ -18,7 +18,7 @@ dependencies = [
     "numpy (==1.26.4)",
     "pydantic>=2.11.4",
 ]
-requires-python = ">=3.12,<3.14"
+requires-python = "==3.12"
 authors = [
   {name = "Théo Moins"},
   {name = "Jean-Baptiste Camps"},
@@ -51,8 +51,8 @@ dev = [
 Repository = "https://github.com/LostMa-ERC/BayesYule.git"
 
 [project.scripts]
-simetree = "src.__main__:cli"
-simetree-test = "src.__main__:test_installation"
+simmatree = "src.__main__:cli"
+simmatree-test = "src.__main__:test_installation"
 
 [tool.isort]
 profile = "black"
