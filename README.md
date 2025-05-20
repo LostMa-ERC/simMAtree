@@ -1,10 +1,16 @@
 # Bayesian Inference for Witness Analysis
 [![DOI](https://zenodo.org/badge/900725844.svg)](https://doi.org/10.5281/zenodo.15350477)
 
+[![python](https://img.shields.io/badge/Python-3.12-3776AB.svg?style=flat&logo=python&logoColor=white)](https://www.python.org)
+[![Python package](https://github.com/LostMa-ERC/BayesYule/actions/workflows/ci.yml/badge.svg)](https://github.com/LostMa-ERC/BayesYule/actions/workflows/ci.yml)
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://www.gnu.org/licenses/MIT)
+
 ## Description
 This repository performs an Approximate Bayesian Computation algorithm on witness distribution data modeled by a Yule process, using PyMC library.
 
 ## Contributing 🔧
+
+[![pre-commit](https://img.shields.io/badge/pre--commit-enabled-brightgreen?logo=pre-commit&logoColor=white)](https://github.com/pre-commit/pre-commit)
 
 To develop and/or contribute to the project, see more detailed instructions [here](./CONTRIBUTING.md).
 
