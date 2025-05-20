@@ -1,6 +1,6 @@
 import unittest
 
-from src.config.parser import Config
+from src.cli.config import Config
 from tests.constants import EXAMPLE_CONFIG
 
 

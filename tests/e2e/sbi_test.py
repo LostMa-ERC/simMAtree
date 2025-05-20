@@ -1,9 +1,9 @@
 import unittest
 from pathlib import Path
 
+from src.cli.config import Config
 from src.cli.generate import generate
 from src.cli.inference import inference
-from src.config.parser import Config
 from tests.constants import MOCK_DIR
 
 INFERENCE_YAML_YULE_SBI = MOCK_DIR.joinpath("yule_sbi_inference_config.yml")
