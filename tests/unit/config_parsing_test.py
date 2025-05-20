@@ -1,10 +1,7 @@
-from pathlib import Path
 import unittest
 
 from src.config.parser import Config
-from src.config.types import ExperimentParamters
-
-EXAMPLE_CONFIG = Path(__file__).parent.parent.joinpath("example.config.yml")
+from tests.constants import EXAMPLE_CONFIG
 
 
 class YamlParsingTest(unittest.TestCase):
@@ -12,12 +9,12 @@ class YamlParsingTest(unittest.TestCase):
         self.conf = Config(EXAMPLE_CONFIG)
 
     def test_example_yaml(self):
+        from src.inference.sbi_backend import SbiBackend
         from src.models.yule_model import YuleModel
-        from src.inference.pymc_backend import PymcBackend
 
         self.assertIsInstance(self.conf.model, YuleModel)
-        self.assertIsInstance(self.conf.backend, PymcBackend)
-        self.assertIsInstance(self.conf.params, ExperimentParamters)
+        self.assertIsInstance(self.conf.backend, SbiBackend)
+        self.assertIsInstance(self.conf.params, dict)
 
 
 class ConfigImportsTest(unittest.TestCase):

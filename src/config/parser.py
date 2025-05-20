@@ -2,8 +2,11 @@ from importlib import import_module
 
 from yaml import safe_load
 
+from src.inference import AbstractInferenceClass
+from src.models import AbstractModelClass
+
+from .constants import ExperimentParamters, ModelImports
 from .exceptions import InvalidConfigValue
-from .types import ModelImports, ExperimentParamters
 
 
 class Config(object):
@@ -12,13 +15,14 @@ class Config(object):
             self.yaml: dict = safe_load(f)
 
     @property
-    def model(self) -> object:
+    def model(self) -> AbstractModelClass:
         name = self.yaml["model"]["name"]
         config = self.yaml["model"]["config"]
-        return self.create_class(code_name=name, params=config)
+        params = self.params | config
+        return self.create_class(code_name=name, params=params)
 
     @property
-    def backend(self) -> object | None:
+    def backend(self) -> AbstractInferenceClass | None:
         if not self.yaml.get("inference"):
             return
         name = self.yaml["inference"]["name"]
@@ -26,9 +30,12 @@ class Config(object):
         return self.create_class(code_name=name, params=config)
 
     @property
-    def params(self) -> ExperimentParamters:
+    def params(self) -> dict:
+        if not self.yaml.get("params"):
+            return {}
         conf = self.yaml["params"]
-        return ExperimentParamters.model_validate(conf)
+        validated_data = ExperimentParamters.model_validate(conf)
+        return validated_data.model_dump()
 
     @classmethod
     def import_class(cls, name: str) -> object:

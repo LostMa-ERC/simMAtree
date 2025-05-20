@@ -16,7 +16,7 @@ inference:
   name : PYMC
   config:
     draws : 5
-    chains : 4
+    chains : 1 # Set very low for testing
     random_seed : 42
     epsilon : 1
     sum_stat : identity

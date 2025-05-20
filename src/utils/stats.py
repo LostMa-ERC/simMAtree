@@ -59,11 +59,13 @@ def compute_stat_witness(
 def inverse_compute_stat_witness(stats):
     """Inverse les statistiques pour retrouver les valeurs d'origine"""
 
-    nb_temoins = int(stats[0] * 1e6)
-    nb_oeuvre = int(stats[1] * 1e6)
-    max_wit = int(stats[3] * stats[0] * 1e6)
-    med_wit = int(stats[4] * stats[3] * stats[0] * 1e6)
-    nb_one = int(stats[5] * stats[1] * 1e6)
+    nb_temoins = int(stats[0] * 1e6)  # number of witnesses
+    nb_oeuvre = int(stats[1] * 1e6)  # number of works
+    max_wit = int(stats[3] * stats[0] * 1e6)  # maximum number of witnesses for 1 work
+    med_wit = int(
+        stats[4] * stats[3] * stats[0] * 1e6
+    )  # median of witness number per work
+    nb_one = int(stats[5] * stats[1] * 1e6)  # works with 1 witness
 
     return [nb_temoins, nb_oeuvre, max_wit, med_wit, nb_one]
 

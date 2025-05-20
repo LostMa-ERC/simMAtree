@@ -1,7 +1,7 @@
 from pathlib import Path
 
-from src.utils.evaluation import evaluate_inference
 from src.config.types import ExperimentParamters
+from src.utils.evaluation import evaluate_inference
 
 
 def score(true_params: ExperimentParamters, results_dir: str):

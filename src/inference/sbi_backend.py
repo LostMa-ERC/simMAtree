@@ -1,3 +1,5 @@
+from pathlib import Path
+
 import numpy as np
 import pandas as pd
 import sbi.inference
@@ -5,18 +7,35 @@ import torch
 from sbi.inference import simulate_for_sbi
 from sbi.utils.user_input_checks import check_sbi_inputs, process_simulator
 
-from src.inference.base_backend import InferenceBackend
+from src.inference.base_backend import AbstractInferenceClass
+from src.models.base_model import AbstractModelClass
 from src.utils.visualisation import compute_hpdi_point
 
 
-class SbiBackend(InferenceBackend):
-    def __init__(self, **kwargs):
+class SbiBackend(AbstractInferenceClass):
+    def __init__(
+        self,
+        method: str,
+        num_simulations: int,
+        num_rounds: int,
+        random_seed: int,
+        num_samples: int,
+        num_workers: int,
+        device: str,
+    ):
+        super().__init__(random_seed=random_seed)
         # self.device = self.inference_params.get("device", "cpu")
-        super().__init__(**kwargs)
+        self.method = method
+        self.num_simulations = num_simulations
+        self.num_rounds = num_rounds
+        self.randon_seed = random_seed
+        self.num_samples = num_samples
+        self.num_workers = num_workers
+        self.device = device
         print(self.device)
-        print(self.cpu)
+        # print(self.cpu)
 
-    def run_inference(self, model, data):
+    def run_inference(self, model: AbstractModelClass, data: np.ndarray):
 
         print(f"Training device: {self.device}")
         simulation_device = torch.device("cpu")
@@ -44,27 +63,27 @@ class SbiBackend(InferenceBackend):
         check_sbi_inputs(simulator, prior)
 
         # Choose inference method
-        Model_class = getattr(sbi.inference, self.inference_params["method"].upper())
+        Model_class = getattr(sbi.inference, self.method.upper())
         try:
             inference = Model_class(prior=prior, device=self.device)
         except Exception as e:
             raise e("Unknown SBI method")
 
         # Perform inference with multiple rounds
-        num_simulations = self.inference_params["num_simulations"]
-        num_rounds = self.inference_params["num_rounds"]
+        num_simulations = self.num_simulations
+        num_rounds = self.num_rounds
 
         posteriors = []
         proposal = prior
         # TODO : This part must be change if self.device == "cuda" (alternate between cpu and gpu for simulation and learning)
 
+        print("Running simulations...")
+
         for i in range(num_rounds):
             print(f"ROUND {i+1}")
+
             params, x = simulate_for_sbi(
-                simulator,
-                proposal,
-                num_simulations,
-                num_workers=self.inference_params["num_workers"],
+                simulator, proposal, num_simulations, num_workers=self.num_workers
             )
             zero_counter = torch.sum(torch.all(x == 0, dim=1)).item()
             break_counter = torch.sum(torch.all(x == 1, dim=1)).item()
@@ -85,26 +104,17 @@ class SbiBackend(InferenceBackend):
             proposal = posterior.set_default_x(x_o)
 
         # Get samples from the posterior
-        num_samples = 5000
+        num_samples = 1000
         samples = posterior.sample((num_samples,), x=x_o)
 
         # Create posterior predictive samples
         samples_np = samples.cpu().numpy()
         hpdi_point, hpdi_samples = compute_hpdi_point(samples_np, prob_level=0.95)
 
+        print("Running posterior predictive checks...")
         _, pp_samples = simulate_for_sbi(
-            simulator,
-            proposal,
-            self.inference_params["num_samples"],
-            num_workers=self.inference_params["num_workers"],
+            simulator, proposal, self.num_samples, num_workers=self.num_workers
         )
-
-        # num_pp = 100
-        # pp_samples = []
-        # for i in tqdm(range(min(num_pp, len(samples_np))), desc="Generating posterior predictive samples"):
-        #     param = samples_np[i]
-        #     sim = model.get_simulator(self.rng, param)
-        #     pp_samples.append(sim)
 
         pp_samples = np.array(pp_samples)
 
@@ -119,7 +129,7 @@ class SbiBackend(InferenceBackend):
 
         return self.results
 
-    def save_results(self, obs_values, output_dir):
+    def save_results(self, observed_values: list, output_dir: Path):
         if self.results is None:
             print("Inference needs to be done before saving the results")
             return
@@ -127,10 +137,10 @@ class SbiBackend(InferenceBackend):
         # Create summary statistics for parameters
         samples = self.results["posterior_samples"]
 
-        np.save(f"{output_dir}/posterior_samples.npy", samples)
-        np.save(f"{output_dir}/obs_values.npy", obs_values)
+        np.save(output_dir.joinpath("posterior_samples.npy"), samples)
+        np.save(output_dir.joinpath("obs_values.npy"), observed_values)
         np.save(
-            f"{output_dir}/posterior_predictive.npy",
+            output_dir.joinpath("posterior_predictive.npy"),
             self.results["posterior_predictive"],
         )
 
@@ -146,4 +156,7 @@ class SbiBackend(InferenceBackend):
 
         # Create summary DataFrame
         summary_df = pd.DataFrame(summary_stats)
-        summary_df.to_csv(f"{output_dir}/posterior_summary.csv")
+        summary_df.to_csv(output_dir.joinpath("posterior_summary.csv"))
+
+    def plot_results(self, data, observed_values, output_dir):
+        pass

@@ -1,51 +1,54 @@
+from abc import ABC, abstractmethod
+
+import numpy as np
+import pymc as pm
 import torch
 
+from src.models.constants import PyMCPriors
 
-class BaseModel:
+
+class AbstractModelClass(ABC):
     """Classe abstraite pour définir l'interface d'un modèle"""
 
-    def __init__(self, n_init: int, Nact: int, Ninact: int, max_pop: int):
+    def __init__(
+        self,
+        n_init: int,
+        Nact: int,
+        Ninact: int,
+        max_pop: int,
+        LDA: float = None,
+        lda: float = None,
+        gamma: float = None,
+        mu: float = None,
+    ):
+        # Model configuration
         self.n_init = n_init
         self.Nact = Nact
         self.Ninact = Ninact
         self.max_pop = max_pop
 
-    @property
-    def name(self) -> str:
-        s = str(type(self))
-        s = s.removesuffix("'>")
-        return s.split(".")[-1]
+        # Optional parameters
+        self.LDA = LDA
+        self.lda = lda
+        self.gamma = gamma
+        self.mu = mu
 
-    def get_constraints(self, model, params):
+    @abstractmethod
+    def get_pymc_priors(self, model: pm.Model) -> PyMCPriors:
+        """Définit et retourne les priors du modèle"""
+        pass
+
+    @abstractmethod
+    def get_constraints(self, model: pm.Model, params: PyMCPriors):
         """Définit et retourne les contraintes du modèle"""
         pass
 
-    def get_priors(self):
-        """Définit et retourne les priors du modèle"""
-        pass
-
-    def get_simulator(self):
-        """Définit et retourne les priors du modèle"""
-        pass
-
-    def validate_params(self, params):
-        """Valide et corrige si nécessaire les paramètres avant simulation
-
-        Args:
-            params: Les paramètres à valider
-
-        Returns:
-            Les paramètres validés/corrigés
-        """
-        return params
-
-    def get_pymc_priors(self, model=None):
-        # TODO : Faire une fonction get_prior global qui utilise soit pymc, soit sbi en fonction d'un argument ?
+    @abstractmethod
+    def get_simulator(self, rng: np.random.default_rng, params: PyMCPriors):
         """Définit et retourne les priors du modèle"""
         pass
 
     def sample_from_prior(self, n_samples=1, device="cpu", param_names=None):
-
         if not hasattr(self, "get_sbi_priors"):
             raise NotImplementedError("La méthode get_sbi_priors doit être implémentée")
 

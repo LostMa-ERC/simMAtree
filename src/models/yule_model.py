@@ -3,88 +3,47 @@ import pymc as pm
 import torch
 from sbi.utils.user_input_checks import process_prior
 
-from src.models.base_model import BaseModel
+from src.models.base_model import AbstractModelClass
+from src.models.constants import PyMCPriors
 from src.utils.stats import compute_stat_witness
 
 
-class YuleModel(BaseModel):
+class YuleModel(AbstractModelClass):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
 
-    def validate_params(self, params):
-        """Valide les paramètres pour le modèle Yule"""
-        try:
-            LDA, lda, gamma, mu = self.process_params(params)
-
-            if (
-                LDA < 0
-                or np.isnan(LDA)
-                or lda < 0
-                or np.isnan(lda)
-                or gamma < 0
-                or np.isnan(gamma)
-                or mu < 0
-                or np.isnan(mu)
-            ):
-                raise ValueError("Paramètres invalides détectés")
-
-            if not (lda + gamma > mu and gamma < lda):
-                raise ValueError("Contraintes du modèle non respectées")
-
-            return params
-        except ValueError:
-            raise
-
     def get_pymc_priors(self, model):
+        # Required method, inherited from AbstractBaseClass
         with model:
             LDA = pm.Uniform("LDA", lower=0, upper=0.05)
             lda = pm.Uniform("lda", lower=0, upper=0.05)
             gamma = pm.Uniform("gamma", lower=0, upper=0.01)
             mu = pm.Uniform("mu", lower=0, upper=0.01)
-        return LDA, lda, gamma, mu
-
-    def get_sbi_priors(self, device="cpu"):
-        from src.models.distribution import ConstrainedUniform
-
-        # LDA, lda, gamma, mu
-        lower_bounds = torch.tensor([0.0, 0.0, 0.0, 0.0], device=device)
-        upper_bounds = torch.tensor([2, 0.015, 0.01, 0.01], device=device)
-
-        prior = ConstrainedUniform(lower_bounds, upper_bounds, device=device)
-        prior, num_parameters, prior_returns_numpy = process_prior(prior)
-        return prior
+        return PyMCPriors(LDA=LDA, lda=lda, mu=mu, gamma=gamma)
 
     def get_constraints(self, model, params):
-        LDA, lda, gamma, mu = params
+        # Required method, inherited from AbstractBaseClass
         with model:
             constraints = pm.Potential(
                 "constraints",
-                pm.math.switch((lda + gamma > mu) & (gamma < lda), 0, -np.inf),
+                pm.math.switch(
+                    (params.lda + params.gamma > params.mu)
+                    & (params.gamma < params.lda),
+                    0,
+                    -np.inf,
+                ),
             )
         return constraints
 
-    def process_params(self, params):
-        if isinstance(params, torch.Tensor):
-            LDA = params[0].item()
-            lda = params[1].item()
-            gamma = params[2].item()
-            mu = params[3].item()
-        else:
-            LDA = params[0]
-            lda = params[1]
-            gamma = params[2]
-            mu = params[3]
-            try:
-                if not isinstance(LDA, float) and hasattr(LDA, "__getitem__"):
-                    LDA = LDA[0]
-                    lda = lda[0]
-                    gamma = gamma[0]
-                    mu = mu[0]
-            except Exception:
-                pass
-        return LDA, lda, gamma, mu
+    def get_simulator(self, rng, params, size=None, additional_stats=True):
+        # Required method, inherited from AbstractBaseClass
+        witness_nb = self.simulate_pop(rng, params)
+        stats = compute_stat_witness(witness_nb, additional_stats)
+
+        return stats
 
     def simulate_pop(self, rng, params):
+        # Required method, inherited from AbstractBaseClass
 
         LDA, lda, gamma, mu = self.process_params(params)
 
@@ -159,8 +118,61 @@ class YuleModel(BaseModel):
         else:
             return []
 
-    def get_simulator(self, rng, params, additional_stats=True, size=None):
-        witness_nb = self.simulate_pop(rng, params)
-        stats = compute_stat_witness(witness_nb, additional_stats)
+    def validate_params(self, params):
+        """Valide les paramètres pour le modèle Yule"""
+        try:
+            LDA, lda, gamma, mu = self.process_params(params)
 
-        return stats
+            if (
+                LDA < 0
+                or np.isnan(LDA)
+                or lda < 0
+                or np.isnan(lda)
+                or gamma < 0
+                or np.isnan(gamma)
+                or mu < 0
+                or np.isnan(mu)
+            ):
+                raise ValueError("Paramètres invalides détectés")
+
+            if not (lda + gamma > mu and gamma < lda):
+                raise ValueError("Contraintes du modèle non respectées")
+
+            return params
+        except ValueError:
+            raise
+
+    def get_sbi_priors(self, device="cpu"):
+        from src.models.distribution import ConstrainedUniform
+
+        # LDA, lda, gamma, mu
+        lower_bounds = torch.tensor([0.0, 0.0, 0.0, 0.0], device=device)
+        upper_bounds = torch.tensor([2, 0.015, 0.01, 0.01], device=device)
+
+        prior = ConstrainedUniform(lower_bounds, upper_bounds, device=device)
+        prior, num_parameters, prior_returns_numpy = process_prior(prior)
+        return prior
+
+    def process_params(self, params):
+        # TODO: Check where the params are generated and see if the data type
+        # can be replaced by something more stable (dataclass, Pydantic model,
+        # namedtuple, etc.)
+        if isinstance(params, torch.Tensor):
+            LDA = params[0].item()
+            lda = params[1].item()
+            gamma = params[2].item()
+            mu = params[3].item()
+        else:
+            LDA = params[0]
+            lda = params[1]
+            gamma = params[2]
+            mu = params[3]
+            try:
+                if not isinstance(LDA, float) and hasattr(LDA, "__getitem__"):
+                    LDA = LDA[0]
+                    lda = lda[0]
+                    gamma = gamma[0]
+                    mu = mu[0]
+            except Exception:
+                pass
+        return LDA, lda, gamma, mu

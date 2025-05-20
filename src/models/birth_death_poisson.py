@@ -1,19 +1,49 @@
 import numpy as np
 import pymc as pm
+from pytensor.tensor.variable import TensorVariable
 
-from src.models.base_model import BaseModel
+from src.models.base_model import AbstractModelClass
+from src.models.constants import PyMCPriors
 from src.utils.stats import compute_stat_witness
 
 
-class BirthDeathPoisson(BaseModel):
+class BirthDeathPoisson(AbstractModelClass):
     def __init__(self, **kwargs):
         super().__init__(**kwargs)
 
-    def simulate_pop(self, rng, params):
-        """
-        Generate a Yule population
-        """
+    def get_pymc_priors(self, model):
+        # Required method, inherited from AbstractBaseClass
+        with model:
+            LDA = pm.Gamma("LDA", alpha=1, beta=1)
+            lda = pm.Uniform("lda", lower=0, upper=0.05)
+            mu = pm.Uniform("mu", lower=0, upper=0.01)
+        return PyMCPriors(LDA=LDA, lda=lda, mu=mu)
 
+    def get_constraints(self, model, params) -> TensorVariable:
+        # Required method, inherited from AbstractBaseClass
+        with model:
+            constraints = pm.Potential(
+                "constraints", pm.math.switch((params.lda > params.mu), 0, -np.inf)
+            )
+        return constraints
+
+    def get_simulator(self, rng, params, size=None, additional_stats=True):
+        # Required method, inherited from AbstractBaseClass
+        witness_nb = self.simulate_pop(rng, params)
+        try:
+            if not witness_nb:
+                return np.zeros(6)
+            stats = compute_stat_witness(witness_nb)
+            if not np.all(np.isfinite(stats)):
+                return np.zeros(6)
+            return stats
+        except Exception as e:
+            print(f"Error in simulate_tree_stats: {e}")
+            print()
+            return np.zeros(6)
+
+    def simulate_pop(self, rng, params):
+        # Required method, inherited from AbstractBaseClass
         LDA = params[0]
         lda = params[1]
         mu = params[2]
@@ -84,33 +114,3 @@ class BirthDeathPoisson(BaseModel):
             return list(final_species_count.values())
         else:
             return []
-
-    def get_simulator(self, rng, params, size=None):
-
-        witness_nb = self.simulate_pop(rng, params)
-        try:
-            if not witness_nb:
-                return np.zeros(6)
-            stats = compute_stat_witness(witness_nb)
-            if not np.all(np.isfinite(stats)):
-                return np.zeros(6)
-            return stats
-        except Exception as e:
-            print(f"Error in simulate_tree_stats: {e}")
-            print()
-            return np.zeros(6)
-
-    def get_pymc_priors(self, model):
-        with model:
-            LDA = pm.Gamma("LDA", alpha=1, beta=1)
-            lda = pm.Uniform("lda", lower=0, upper=0.05)
-            mu = pm.Uniform("mu", lower=0, upper=0.01)
-        return LDA, lda, mu
-
-    def get_constraints(self, model, params):
-        LDA, lda, mu = params
-        with model:
-            constraints = pm.Potential(
-                "constraints", pm.math.switch((lda > mu), 0, -np.inf)
-            )
-        return constraints

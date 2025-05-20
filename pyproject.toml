@@ -3,7 +3,7 @@ requires = ["hatchling"]
 build-backend = "hatchling.build"
 
 [project]
-name = "bayes-yule"
+name = "lostma-simetree"
 version = "2025.5.16"
 dependencies = [
     "pandas (>=2.2.3,<3.0.0)",
@@ -21,19 +21,14 @@ dependencies = [
 requires-python = ">=3.12,<3.14"
 authors = [
   {name = "Théo Moins"},
+  {name = "Jean-Baptiste Camps"},
+  {name = "Ulysse Godreau"},
+  {name = "Kelly Christensen"}
 ]
 description = "Bayes Yule"
 readme = "README.md"
 license = "MIT"
 keywords = []
-
-[project.optional-dependencies]
-gui = ["PyQt5"]
-dev = [
-  "isort",
-  "pytest",
-  "ruff",
-]
 
 [tool.hatch.build.targets.wheel]
       packages = ["src"]
@@ -43,9 +38,23 @@ members = [
     "uv-test",
 ]
 
+[dependency-groups]
+dev = [
+    "isort>=6.0.1",
+    "pre-commit>=4.2.0",
+    "pytest>=8.3.5",
+    "ruff>=0.11.10",
+    "uv>=0.7.6",
+]
+
 [project.urls]
 Repository = "https://github.com/LostMa-ERC/BayesYule.git"
 
 [project.scripts]
-bule = "src.__main__:cli"
-bule-test = "src.__main__:test_installation"
+simetree = "src.__main__:cli"
+simetree-test = "src.__main__:test_installation"
+
+[tool.isort]
+profile = "black"
+line_length = 79
+src_paths = ["src", "tests"]

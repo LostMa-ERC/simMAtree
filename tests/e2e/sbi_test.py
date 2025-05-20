@@ -1,21 +1,18 @@
 import unittest
 from pathlib import Path
 
-import pytest
-
-from src.config.parser import Config
 from src.cli.generate import generate
 from src.cli.inference import inference
+from src.config.parser import Config
+from tests.constants import MOCK_DIR
 
-MOCK_DIR = Path(__file__).parent.joinpath("mock")
-
-INFERENCE_YAML_YULE_PYMC = MOCK_DIR.joinpath("yule_pymc_inference_config.yml")
+INFERENCE_YAML_YULE_SBI = MOCK_DIR.joinpath("yule_sbi_inference_config.yml")
 SIMULATION_DATA = MOCK_DIR.joinpath("simulation_data.csv")
 
 
-class End2EndYuleTest(unittest.TestCase):
+class End2EndSBITest(unittest.TestCase):
     def setUp(self):
-        self.config = Config(config_path=INFERENCE_YAML_YULE_PYMC)
+        self.config = Config(config_path=INFERENCE_YAML_YULE_SBI)
         self.outdir = Path(__file__).parent.joinpath("results")
         self.outdir.mkdir(exist_ok=True)
         return super().setUp()
@@ -26,14 +23,12 @@ class End2EndYuleTest(unittest.TestCase):
     def test_infererence(self):
         model = self.config.model
         backend = self.config.backend
-        # TODO: Known TypeError in plot_posterior_predictive_stats
-        with pytest.raises(TypeError):
-            inference(
-                csv_file=SIMULATION_DATA,
-                model=model,
-                backend=backend,
-                results_dir=self.outdir,
-            )
+        inference(
+            csv_file=SIMULATION_DATA,
+            model=model,
+            backend=backend,
+            dir=self.outdir,
+        )
 
     def tearDown(self):
         for f in self.outdir.iterdir():
