@@ -2,7 +2,9 @@
 
 ## Installation 📦️
 
-Set up a virtual Python environment, version 3.12* or 3.13*.
+Set up a virtual Python environment, version 3.12*.
+
+> Package and unit tests in [CI workflows](.github/workflows) have shown that the package fails to install in Python version 3.13 due to a build failure with `scipy`'s dependency `OpenBLAS`. Update if/when this gets fixed.
 
 Install the project with its development dependencies.
 
@@ -68,7 +70,7 @@ uv-lock..................................................................Passed
  5 files changed, 23 insertions(+), 7 deletions(-)
 ```
 
-If a pre-commit check doesn't pass, the commit will not be ignored and the files will be automatically updated. You'll need to add them again (`git add`) to your future commit and run `git commit` again.
+If a pre-commit check doesn't pass, the commit will be ignored and the files will be automatically updated. You'll need to add them again (`git add`) to your future commit and run `git commit` again.
 
 ```console
 $ git commit -m "my commit"

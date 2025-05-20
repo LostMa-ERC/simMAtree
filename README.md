@@ -17,9 +17,9 @@ To develop and/or contribute to the project, see more detailed instructions [her
 
 ## Installation 📦️
 
-1. Have Python installed on your computer or in your virtual environment manager, i.e. [`pyenv`](https://github.com/pyenv/pyenv/blob/master/README.md). For this project, you'll need version 3.12 or 3.13 of Python.
+1. Have Python installed on your computer or in your virtual environment manager, i.e. [`pyenv`](https://github.com/pyenv/pyenv/blob/master/README.md). For this project, you'll need version 3.12 of Python.
 
-2. Create a new virtual Python environment (version 3.12 or 3.13) and activate it.
+2. Create a new virtual Python environment (version 3.12) and activate it.
 
 3. Install this package with `pip`. Because it depends on several "heavy" Python libraries (i.e. `torch`), the installation may take several minutes. ☕
 
