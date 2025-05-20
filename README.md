@@ -3,6 +3,7 @@
 
 [![python](https://img.shields.io/badge/Python-3.12-3776AB.svg?style=flat&logo=python&logoColor=white)](https://www.python.org)
 [![Python package](https://github.com/LostMa-ERC/BayesYule/actions/workflows/ci.yml/badge.svg)](https://github.com/LostMa-ERC/BayesYule/actions/workflows/ci.yml)
+[![Test](https://github.com/LostMa-ERC/BayesYule/actions/workflows/unit-tests.yml/badge.svg)](https://github.com/LostMa-ERC/BayesYule/actions/workflows/unit-tests.yml)
 [![License: CC BY-SA 4.0](https://img.shields.io/badge/License-CC_BY--SA_4.0-lightgrey.svg)](https://creativecommons.org/licenses/by-sa/4.0/)
 
 ## Description
