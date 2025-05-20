@@ -4,11 +4,11 @@
 ## Description
 This repository performs an Approximate Bayesian Computation algorithm on witness distribution data modeled by a Yule process, using PyMC library.
 
-## Contributing
+## Contributing 🔧
 
 To develop and/or contribute to the project, see more detailed instructions [here](./CONTRIBUTING.md).
 
-## Installation
+## Installation 📦️
 
 1. Have Python installed on your computer or in your virtual environment manager, i.e. [`pyenv`](https://github.com/pyenv/pyenv/blob/master/README.md). For this project, you'll need version 3.12 or 3.13 of Python.
 
@@ -45,7 +45,7 @@ Looks good!
 
 > Note: It's normal for the command to take a while. Some of the Python dependencies are very "heavy" and, when starting up, importing everything in the library can be slow.
 
-## Usage
+## Usage ▶️
 
 The script supports three tasks: `inference`, `generate` and `score`.
 
