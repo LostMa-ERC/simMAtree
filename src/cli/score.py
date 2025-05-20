@@ -1,6 +1,6 @@
 from pathlib import Path
 
-from src.config.types import ExperimentParamters
+from src.config.constants import ExperimentParamters
 from src.utils.evaluation import evaluate_inference
 
 

@@ -58,3 +58,12 @@ simetree-test = "src.__main__:test_installation"
 profile = "black"
 line_length = 79
 src_paths = ["src", "tests"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests", "src"]
+addopts = '--doctest-modules --doctest-glob="*.md"'
+doctest_optionflags = [
+    "ELLIPSIS",
+    "NORMALIZE_WHITESPACE",
+    "IGNORE_EXCEPTION_DETAIL"
+]

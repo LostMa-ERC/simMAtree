@@ -5,9 +5,11 @@ import numpy as np
 import pandas as pd
 import xarray as xr
 
-from src.utils.visualisation import (plot_combined_hpdi,
-                                     plot_marginal_posterior,
-                                     plot_posterior_predictive_stats)
+from src.utils.visualisation import (
+    plot_combined_hpdi,
+    plot_marginal_posterior,
+    plot_posterior_predictive_stats,
+)
 
 
 def evaluate_inference(true_params, results_dir, param_names=None):
