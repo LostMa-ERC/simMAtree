@@ -4,7 +4,7 @@ build-backend = "hatchling.build"
 
 [project]
 name = "simMAtree"
-version = "2025.5.16"
+version = "0.0.1"
 dependencies = [
     "pandas (>=2.2.3,<3.0.0)",
     "pymc (>=5.22.0,<6.0.0)",
@@ -27,7 +27,7 @@ authors = [
 ]
 description = "Bayes Yule"
 readme = "README.md"
-license = "CC BY-SA"
+license = {file = "LICENSE"}
 keywords = []
 
 [tool.hatch.build.targets.wheel]

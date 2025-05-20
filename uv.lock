@@ -1884,7 +1884,7 @@ wheels = [
 
 [[package]]
 name = "simmatree"
-version = "2025.5.16"
+version = "0.0.1"
 source = { editable = "." }
 dependencies = [
     { name = "arviz" },
