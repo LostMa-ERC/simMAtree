@@ -2,8 +2,8 @@
 [![DOI](https://zenodo.org/badge/900725844.svg)](https://doi.org/10.5281/zenodo.15350477)
 
 [![python](https://img.shields.io/badge/Python-3.12-3776AB.svg?style=flat&logo=python&logoColor=white)](https://www.python.org)
-[![Python package](https://github.com/LostMa-ERC/BayesYule/actions/workflows/ci.yml/badge.svg)](https://github.com/LostMa-ERC/BayesYule/actions/workflows/ci.yml)
-[![Tests](https://github.com/LostMa-ERC/BayesYule/actions/workflows/unit-tests.yml/badge.svg)](https://github.com/LostMa-ERC/BayesYule/actions/workflows/unit-tests.yml)
+[![Python package](https://github.com/LostMa-ERC/simMAtree/actions/workflows/ci.yml/badge.svg)](https://github.com/LostMa-ERC/simMAtree/actions/workflows/ci.yml)
+[![Tests](https://github.com/LostMa-ERC/simMAtree/actions/workflows/unit-tests.yml/badge.svg)](https://github.com/LostMa-ERC/simMAtree/actions/workflows/unit-tests.yml)
 [![License: CC BY-SA 4.0](https://img.shields.io/badge/License-CC_BY--SA_4.0-lightgrey.svg)](https://creativecommons.org/licenses/by-sa/4.0/)
 
 ## Description
@@ -30,7 +30,7 @@ To develop and/or contribute to the project, see more detailed instructions [her
 ### Option 1:
 
 ```shell
-pip install git+https://github.com/LostMa-ERC/BayesYule.git
+pip install git+https://github.com/LostMa-ERC/simMAtree.git
 ```
 
 ### Option 2:
@@ -38,7 +38,7 @@ pip install git+https://github.com/LostMa-ERC/BayesYule.git
 > Note: Requires that you have [`git` installed](https://git-scm.com/book/en/v2/Getting-Started-Installing-Git) on your computer.
 
 ```shell
-git clone https://github.com/LostMa-ERC/BayesYule.git
+git clone https://github.com/LostMa-ERC/simMAtree.git
 cd simetree
 pip install .
 ```
