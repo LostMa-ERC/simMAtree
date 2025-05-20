@@ -67,3 +67,33 @@ uv-lock..................................................................Passed
 [master f82454b] my commit
  5 files changed, 23 insertions(+), 7 deletions(-)
 ```
+
+If a pre-commit check doesn't pass, the commit will not be ignored and the files will be automatically updated. You'll need to add them again (`git add`) to your future commit and run `git commit` again.
+
+```console
+$ git commit -m "my commit"
+ruff check...............................................................Passed
+ruff format..............................................................Passed
+isort....................................................................Failed
+- hook id: isort
+- files were modified by this hook
+
+Fixing /###/simetree/src/__main__.py
+Fixing /###/simetree/tests/e2e/pymc_test.py
+Fixing /###/simetree/tests/e2e/sbi_test.py
+
+$ git status
+On branch master
+Your branch is up to date with 'origin/master'.
+
+$ git add src/ tests/
+$ git commit -m "my commit"
+ruff check...............................................................Passed
+ruff format..............................................................Passed
+isort....................................................................Passed
+
+$ git status
+On branch master
+Your branch is ahead of 'origin/master' by 1 commit.
+  (use "git push" to publish your local commits)
+```
