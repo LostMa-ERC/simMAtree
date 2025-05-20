@@ -87,14 +87,15 @@ model:
     max_pop: 500000
 
 inference:
-  name: PyMC
+  name: SBI
   config:
-    draws: 5
-    chains: 4
-    random_seed: 42
-    epsilon: 1
-    sum_stat: identity
-    distance: gaussian
+    method : NPE
+    num_simulations : 10
+    num_rounds : 1
+    random_seed : 42
+    num_samples : 10
+    num_workers : 10
+    device : cpu
 ```
 
 2. Run the inference task.
@@ -152,14 +153,15 @@ params:
   mu: 0.0033
 
 inference:
-  name: PyMC
+  name: SBI
   config:
-    draws: 5
-    chains: 4
-    random_seed: 42
-    epsilon: 1
-    sum_stat: identity
-    distance: gaussian
+    method : NPE
+    num_simulations : 10
+    num_rounds : 1
+    random_seed : 42
+    num_samples : 10
+    num_workers : 10
+    device : cpu
 ```
 
 2. Generate synthetic data with known parameters.
