@@ -714,57 +714,6 @@ dependencies = [
 sdist = { url = "https://files.pythonhosted.org/packages/c0/73/8dac224c46949e61bc52558384138a2b79fa0b7be10367074862fe9994dd/logical-unification-0.4.6.tar.gz", hash = "sha256:908435123f8a106fa4dcf9bf1b75c7beb309fa2bbecf277868af8f1c212650a0", size = 31679, upload-time = "2023-05-06T21:56:13.511Z" }
 
 [[package]]
-name = "lostma-simmatree"
-version = "2025.5.16"
-source = { editable = "." }
-dependencies = [
-    { name = "arviz" },
-    { name = "click" },
-    { name = "numpy" },
-    { name = "pandas" },
-    { name = "pyaml" },
-    { name = "pydantic" },
-    { name = "pymc" },
-    { name = "rich" },
-    { name = "sbi" },
-    { name = "seaborn" },
-    { name = "torch" },
-]
-
-[package.dev-dependencies]
-dev = [
-    { name = "isort" },
-    { name = "pre-commit" },
-    { name = "pytest" },
-    { name = "ruff" },
-    { name = "uv" },
-]
-
-[package.metadata]
-requires-dist = [
-    { name = "arviz", specifier = ">=0.21.0,<0.22.0" },
-    { name = "click", specifier = ">=8.2.0,<9.0.0" },
-    { name = "numpy", specifier = "==1.26.4" },
-    { name = "pandas", specifier = ">=2.2.3,<3.0.0" },
-    { name = "pyaml", specifier = ">=25.1.0" },
-    { name = "pydantic", specifier = ">=2.11.4" },
-    { name = "pymc", specifier = ">=5.22.0,<6.0.0" },
-    { name = "rich", specifier = ">=14.0.0,<15.0.0" },
-    { name = "sbi", specifier = "==0.23.3" },
-    { name = "seaborn", specifier = ">=0.13.2" },
-    { name = "torch", specifier = ">=2.7.0,<3.0.0" },
-]
-
-[package.metadata.requires-dev]
-dev = [
-    { name = "isort", specifier = ">=6.0.1" },
-    { name = "pre-commit", specifier = ">=4.2.0" },
-    { name = "pytest", specifier = ">=8.3.5" },
-    { name = "ruff", specifier = ">=0.11.10" },
-    { name = "uv", specifier = ">=0.7.6" },
-]
-
-[[package]]
 name = "markdown"
 version = "3.8"
 source = { registry = "https://pypi.org/simple" }
@@ -1931,6 +1880,57 @@ source = { registry = "https://pypi.org/simple" }
 sdist = { url = "https://files.pythonhosted.org/packages/9e/8b/dc1773e8e5d07fd27c1632c45c1de856ac3dbf09c0147f782ca6d990cf15/setuptools-80.7.1.tar.gz", hash = "sha256:f6ffc5f0142b1bd8d0ca94ee91b30c0ca862ffd50826da1ea85258a06fd94552", size = 1319188, upload-time = "2025-05-15T02:41:00.955Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/a1/18/0e835c3a557dc5faffc8f91092f62fc337c1dab1066715842e7a4b318ec4/setuptools-80.7.1-py3-none-any.whl", hash = "sha256:ca5cc1069b85dc23070a6628e6bcecb3292acac802399c7f8edc0100619f9009", size = 1200776, upload-time = "2025-05-15T02:40:58.887Z" },
+]
+
+[[package]]
+name = "simmatree"
+version = "2025.5.16"
+source = { editable = "." }
+dependencies = [
+    { name = "arviz" },
+    { name = "click" },
+    { name = "numpy" },
+    { name = "pandas" },
+    { name = "pyaml" },
+    { name = "pydantic" },
+    { name = "pymc" },
+    { name = "rich" },
+    { name = "sbi" },
+    { name = "seaborn" },
+    { name = "torch" },
+]
+
+[package.dev-dependencies]
+dev = [
+    { name = "isort" },
+    { name = "pre-commit" },
+    { name = "pytest" },
+    { name = "ruff" },
+    { name = "uv" },
+]
+
+[package.metadata]
+requires-dist = [
+    { name = "arviz", specifier = ">=0.21.0,<0.22.0" },
+    { name = "click", specifier = ">=8.2.0,<9.0.0" },
+    { name = "numpy", specifier = "==1.26.4" },
+    { name = "pandas", specifier = ">=2.2.3,<3.0.0" },
+    { name = "pyaml", specifier = ">=25.1.0" },
+    { name = "pydantic", specifier = ">=2.11.4" },
+    { name = "pymc", specifier = ">=5.22.0,<6.0.0" },
+    { name = "rich", specifier = ">=14.0.0,<15.0.0" },
+    { name = "sbi", specifier = "==0.23.3" },
+    { name = "seaborn", specifier = ">=0.13.2" },
+    { name = "torch", specifier = ">=2.7.0,<3.0.0" },
+]
+
+[package.metadata.requires-dev]
+dev = [
+    { name = "isort", specifier = ">=6.0.1" },
+    { name = "pre-commit", specifier = ">=4.2.0" },
+    { name = "pytest", specifier = ">=8.3.5" },
+    { name = "ruff", specifier = ">=0.11.10" },
+    { name = "uv", specifier = ">=0.7.6" },
 ]
 
 [[package]]
