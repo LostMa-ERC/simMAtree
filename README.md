@@ -28,14 +28,14 @@ pip install git+https://github.com/LostMa-ERC/BayesYule.git
 
 ```shell
 git clone https://github.com/LostMa-ERC/BayesYule.git
-cd BayesYule
+cd simetree
 pip install .
 ```
 
 4. Test the installation.
 
 ```console
-$ bule-test
+$ simetree-test
 Looks good!
 ```
 
@@ -47,7 +47,7 @@ The script supports three tasks: `inference`, `generate` and `score`.
 
 No matter the task in your experiment, prepare a configuration YAML file. Follow the [model here](./example.config.yml).
 
-When running any of the `bule` tasks, you'll need to provide your experiment's configuration file.
+When running any of the `simetree` tasks, you'll need to provide your experiment's configuration file.
 
 ### Data Generation
 
@@ -68,7 +68,7 @@ model:
 2. Run the generate task.
 
 ```shell
-bule -c <CONFIG FILE> generate -o <OUTPUT FILE>
+simetree -c <CONFIG FILE> generate -o <OUTPUT FILE>
 ```
 
 ### Inference
@@ -101,7 +101,7 @@ inference:
 2. Run the inference task.
 
 ```shell
-bule -c <CONFIG FILE> infer -i <DATA FILE> -o <OUTPUT DIRECTORY>
+simetree -c <CONFIG FILE> infer -i <DATA FILE> -o <OUTPUT DIRECTORY>
 ```
 
 ### Score
@@ -130,7 +130,7 @@ params:
 2. Run the score task.
 
 ```shell
-bule -c <CONFIG FILE> score -o <OUTPUT DIRECTORY>
+simetree -c <CONFIG FILE> score -o <OUTPUT DIRECTORY>
 ```
 
 ### Example Workflow
@@ -167,19 +167,19 @@ inference:
 2. Generate synthetic data with known parameters.
 
 ```shell
-bule -c experiment_1.yml generate -o synthetic_data.csv
+simetree -c experiment_1.yml generate -o synthetic_data.csv
 ```
 
 3. Run inference on the synthetic data.
 
 ```shell
-bule -c experiment_1.yml infer -i synthetic_data.csv -o results/
+simetree -c experiment_1.yml infer -i synthetic_data.csv -o results/
 ```
 
 4. Evaluate inference quality.
 
 ```shell
-bule -c experiment_1.yml score -d results/
+simetree -c experiment_1.yml score -d results/
 ```
 
 ## Models
