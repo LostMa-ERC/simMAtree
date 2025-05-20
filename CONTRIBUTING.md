@@ -97,3 +97,25 @@ On branch master
 Your branch is ahead of 'origin/master' by 1 commit.
   (use "git push" to publish your local commits)
 ```
+
+## Update dependencies
+
+To add or remove required dependencies in the project, update the list in the [`pyproject.toml`](./pyproject.toml).
+
+```toml
+dependencies = [
+    "pandas (>=2.2.3,<3.0.0)",
+    "pymc (>=5.22.0,<6.0.0)",
+    "pyaml (>=25.1.0)",
+    "arviz (>=0.21.0,<0.22.0)",
+    "torch (>=2.7.0,<3.0.0)",
+    "sbi (==0.23.3)",
+    "seaborn (>=0.13.2)",
+    "rich (>=14.0.0,<15.0.0)",
+    "click (>=8.2.0,<9.0.0)",
+    "numpy (==1.26.4)",
+    "pydantic>=2.11.4",
+]
+```
+
+When declaring the required version, follow the formatting shown above.
