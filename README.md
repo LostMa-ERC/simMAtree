@@ -141,7 +141,7 @@ params:
 2. Run the score task.
 
 ```shell
-simetree -c <CONFIG FILE> score -o <OUTPUT DIRECTORY>
+simetree -c <CONFIG FILE> score -d <OUTPUT DIRECTORY>
 ```
 
 ### Example Workflow
