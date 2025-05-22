@@ -1,15 +1,13 @@
 from pathlib import Path
 
-from src.cli.config.constants import ExperimentParamters
 from src.utils.evaluation import evaluate_inference
 
 
-def score(true_params: ExperimentParamters, results_dir: str):
+def score(param_dict: dict, results_dir: str):
     dir = Path(results_dir)
     dir.mkdir(exist_ok=True)
 
     # Déterminer les noms de paramètres en fonction du modèle
-    param_dict = true_params.model_dump()
     param_names = list(param_dict.keys())
 
     # Exécuter l'évaluation

@@ -38,7 +38,7 @@ members = [
     "uv-test",
 ]
 
-[dependency-groups]
+[project.optional-dependencies]
 dev = [
     "isort>=6.0.1",
     "pre-commit>=4.2.0",

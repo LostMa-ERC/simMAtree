@@ -60,10 +60,26 @@ def infer_command(config: Config, infile: str, outdir: str, separator: str):
     required=True,
     type=click.Path(file_okay=True, dir_okay=False, writable=True),
 )
+@click.option(
+    "-s",
+    "--seed",
+    required=False,
+    default=42,
+    type=click.INT,
+    help="Random seed for generation",
+)
+@click.option("--show-params", default=False, help="Display parameters in JSON format")
 @click.pass_obj
-def generate_command(config: Config, outfile: str):
+def generate_command(config: Config, outfile: str, seed: int, show_params: bool):
     model = config.model
-    generate(data_path=outfile, model=model)
+    params = config.params
+    generate(
+        data_path=outfile,
+        model=model,
+        parameters=params,
+        seed=seed,
+        show_params=show_params,
+    )
 
 
 @cli.command("score")
@@ -75,8 +91,8 @@ def generate_command(config: Config, outfile: str):
 )
 @click.pass_obj
 def score_command(config: Config, directory: str):
-    true_params = config.parse_experiment_parameters()
-    score(true_params=true_params, results_dir=directory)
+    true_params = config.params
+    score(param_dict=true_params, results_dir=directory)
 
 
 if __name__ == "__main__":

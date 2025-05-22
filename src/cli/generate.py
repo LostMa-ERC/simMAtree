@@ -10,21 +10,18 @@ from src.utils.stats import compute_stat_witness, inverse_compute_stat_witness
 def generate(
     data_path: str,
     model: YuleModel | BirthDeathPoisson,
-    model_param=None,
+    parameters,
     seed: int = 42,
+    show_params: bool = False,
 ):
     rng = np.random.default_rng(seed)
 
-    if model_param is None:
-        parameters = model.sample_from_prior()
-    else:
-        parameters = model_param
+    if show_params:
+        print("\nPARAMETERS_JSON_START")
+        print(json.dumps(parameters))
+        print("PARAMETERS_JSON_END")
 
-    print("\nPARAMETERS_JSON_START")
-    print(json.dumps(parameters))
-    print("PARAMETERS_JSON_END")
-
-    parameters = parameters[0]
+    print("Generating population...")
 
     pop = model.simulate_pop(rng, list(parameters.values()))
     if pop == []:
@@ -41,7 +38,7 @@ def generate(
     for i, num in enumerate(pop):
         for j in range(num):
             text_val.append(f"T{i}")
-            witness_val.append(f"W{i}-{j+1}")
+            witness_val.append(f"W{i}-{j + 1}")
 
     # Créer le dataframe
     df = pd.DataFrame({"witness_ID": witness_val, "text_ID": text_val})

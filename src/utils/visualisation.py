@@ -13,7 +13,6 @@ from src.utils.stats import inverse_compute_stat_witness
 
 
 def plot_sbi_pairplot(samples, output_dir, hpdi_point=None):
-
     param_samples = torch.tensor(samples)
     fig, axes = pairplot(
         param_samples,
@@ -64,7 +63,6 @@ def plot_sbi_pairplot(samples, output_dir, hpdi_point=None):
 
 
 def plot_combined_hpdi(samples_list, output_dir, dataset_names=None, true_values=None):
-
     n_datasets = len(samples_list)
 
     # colors = sns.color_palette("tab10", n_datasets)
@@ -244,7 +242,7 @@ def plot_combined_hpdi(samples_list, output_dir, dataset_names=None, true_values
             else:  # Triangle supérieur: laisser vide
                 ax.set_visible(False)
     axes[3, 3].legend(loc="upper right", fontsize=9, framealpha=0.9)
-    plt.savefig(output_dir + "/pairplot", dpi=300, bbox_inches="tight")
+    plt.savefig(output_dir.joinpath("pairplot"), dpi=300, bbox_inches="tight")
 
 
 def plot_marginal_posterior(samples, output_dir, hpdi_point=None, true_value=None):
@@ -359,7 +357,7 @@ def plot_posterior_predictive_stats(
         axes[-1].remove()
 
     plt.tight_layout()
-    plt.savefig(output_dir + "/pp_summaries.png")
+    plt.savefig(output_dir.joinpath("pp_summaries.png"))
     plt.close()
 
 

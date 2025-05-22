@@ -18,7 +18,11 @@ class End2EndSBITest(unittest.TestCase):
         return super().setUp()
 
     def test_generate(self):
-        generate(data_path=SIMULATION_DATA, model=self.config.model)
+        generate(
+            data_path=SIMULATION_DATA,
+            model=self.config.model,
+            parameters=self.config.params,
+        )
 
     def test_infererence(self):
         model = self.config.model

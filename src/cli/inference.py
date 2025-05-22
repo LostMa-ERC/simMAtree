@@ -45,11 +45,11 @@ def inference(
     console.rule("Running inference")
     console.print(type(model).__name__, style="cyan")
     inference_data = backend.run_inference(model=model, data=stats)
-    console.print(inference_data)
+    # console.print(inference_data)
 
     # Compute results
     observed_values = inverse_compute_stat_witness(stats=stats)
-    console.print(observed_values)
+    # console.print(observed_values)
 
     # Save the inference data to results directory
     console.rule("Writing results")

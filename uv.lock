@@ -1657,7 +1657,7 @@ dependencies = [
     { name = "torch" },
 ]
 
-[package.dev-dependencies]
+[package.optional-dependencies]
 dev = [
     { name = "isort" },
     { name = "pre-commit" },
@@ -1670,25 +1670,22 @@ dev = [
 requires-dist = [
     { name = "arviz", specifier = ">=0.21.0,<0.22.0" },
     { name = "click", specifier = ">=8.2.0,<9.0.0" },
+    { name = "isort", marker = "extra == 'dev'", specifier = ">=6.0.1" },
     { name = "numpy", specifier = "==1.26.4" },
     { name = "pandas", specifier = ">=2.2.3,<3.0.0" },
+    { name = "pre-commit", marker = "extra == 'dev'", specifier = ">=4.2.0" },
     { name = "pyaml", specifier = ">=25.1.0" },
     { name = "pydantic", specifier = ">=2.11.4" },
     { name = "pymc", specifier = ">=5.22.0,<6.0.0" },
+    { name = "pytest", marker = "extra == 'dev'", specifier = ">=8.3.5" },
     { name = "rich", specifier = ">=14.0.0,<15.0.0" },
+    { name = "ruff", marker = "extra == 'dev'", specifier = ">=0.11.10" },
     { name = "sbi", specifier = "==0.23.3" },
     { name = "seaborn", specifier = ">=0.13.2" },
     { name = "torch", specifier = ">=2.7.0,<3.0.0" },
+    { name = "uv", marker = "extra == 'dev'", specifier = ">=0.7.6" },
 ]
-
-[package.metadata.requires-dev]
-dev = [
-    { name = "isort", specifier = ">=6.0.1" },
-    { name = "pre-commit", specifier = ">=4.2.0" },
-    { name = "pytest", specifier = ">=8.3.5" },
-    { name = "ruff", specifier = ">=0.11.10" },
-    { name = "uv", specifier = ">=0.7.6" },
-]
+provides-extras = ["dev"]
 
 [[package]]
 name = "six"

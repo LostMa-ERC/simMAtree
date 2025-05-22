@@ -7,7 +7,7 @@ model:
     n_init: 1
     Nact: 1000
     Ninact: 1000
-    max_pop: 50000
+    max_pop: 500000
 
 # Ground truth for scoring and generation
 params:
