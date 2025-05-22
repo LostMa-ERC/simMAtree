@@ -39,14 +39,14 @@ pip install git+https://github.com/LostMa-ERC/simMAtree.git
 
 ```shell
 git clone https://github.com/LostMa-ERC/simMAtree.git
-cd simetree
+cd simMAtree
 pip install .
 ```
 
 4. Test the installation.
 
 ```console
-$ simetree-test
+$ simmatree-test
 Looks good!
 ```
 
@@ -58,7 +58,7 @@ The script supports three tasks: `inference`, `generate` and `score`.
 
 No matter the task in your experiment, prepare a configuration YAML file. Follow the [model here](./example.config.yml).
 
-When running any of the `simetree` tasks, you'll need to provide your experiment's configuration file.
+When running any of the `simmatree` tasks, you'll need to provide your experiment's configuration file.
 
 ### Data Generation
 
@@ -74,12 +74,18 @@ model:
     Nact: 1000
     Ninact: 1000
     max_pop: 500000
+
+params:
+  LDA: 0.3
+  lda: 0.012
+  gamma: 0.001
+  mu: 0.0033
 ```
 
 2. Run the generate task.
 
 ```shell
-simetree -c <CONFIG FILE> generate -o <OUTPUT FILE>
+simmatree -c <CONFIG FILE> generate -o <OUTPUT FILE>
 ```
 
 ### Inference
@@ -112,7 +118,7 @@ inference:
 2. Run the inference task.
 
 ```shell
-simetree -c <CONFIG FILE> infer -i <DATA FILE> -o <OUTPUT DIRECTORY>
+simmatree -c <CONFIG FILE> infer -i <DATA FILE> -o <OUTPUT DIRECTORY>
 ```
 
 ### Score
@@ -141,7 +147,7 @@ params:
 2. Run the score task.
 
 ```shell
-simetree -c <CONFIG FILE> score -d <OUTPUT DIRECTORY>
+simmatree -c <CONFIG FILE> score -d <OUTPUT DIRECTORY>
 ```
 
 ### Example Workflow
@@ -178,19 +184,19 @@ inference:
 2. Generate synthetic data with known parameters.
 
 ```shell
-simetree -c experiment_1.yml generate -o synthetic_data.csv
+simmatree -c experiment_1.yml generate -o synthetic_data.csv
 ```
 
 3. Run inference on the synthetic data.
 
 ```shell
-simetree -c experiment_1.yml infer -i synthetic_data.csv -o results/
+simmatree -c experiment_1.yml infer -i synthetic_data.csv -o results/
 ```
 
 4. Evaluate inference quality.
 
 ```shell
-simetree -c experiment_1.yml score -d results/
+simmatree -c experiment_1.yml score -d results/
 ```
 
 ## Models
