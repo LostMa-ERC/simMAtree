@@ -145,7 +145,7 @@ class BirthDeathPoisson(AbstractModelClass):
 
         # LDA, lda, gamma, mu
         lower_bounds = torch.tensor([0.0, 0.0, 0.0, 0.0], device=device)
-        upper_bounds = torch.tensor([2, 0.015, 0.01, 0.01], device=device)
+        upper_bounds = torch.tensor([1e-10, 0.02, 1e-10, 0.015], device=device)
 
         prior = ConstrainedUniform(lower_bounds, upper_bounds, device=device)
         prior, num_parameters, prior_returns_numpy = process_prior(prior)
