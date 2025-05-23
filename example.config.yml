@@ -16,7 +16,7 @@ params:
   gamma: 0.001
   mu: 0.0033
 
-# Set up for the inference backend (optional)
+# Set up for the inference backend
 inference:
   name: SBI # "PyMC" or "SBI"
   config:

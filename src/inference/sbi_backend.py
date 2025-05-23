@@ -4,12 +4,18 @@ import numpy as np
 import pandas as pd
 import sbi.inference
 import torch
+import xarray as xr
 from sbi.inference import simulate_for_sbi
 from sbi.utils.user_input_checks import check_sbi_inputs, process_simulator
 
 from src.inference.base_backend import AbstractInferenceClass
 from src.models.base_model import AbstractModelClass
-from src.utils.visualisation import compute_hpdi_point
+from src.utils.visualisation import (
+    compute_hpdi_point,
+    plot_combined_hpdi,
+    plot_marginal_posterior,
+    plot_posterior_predictive_stats,
+)
 
 
 class SbiBackend(AbstractInferenceClass):
@@ -36,7 +42,6 @@ class SbiBackend(AbstractInferenceClass):
         # print(self.cpu)
 
     def run_inference(self, model: AbstractModelClass, data: np.ndarray):
-
         print(f"Training device: {self.device}")
         simulation_device = torch.device("cpu")
         print(f"Simulation device: {simulation_device}")
@@ -80,7 +85,7 @@ class SbiBackend(AbstractInferenceClass):
         print("Running simulations...")
 
         for i in range(num_rounds):
-            print(f"ROUND {i+1}")
+            print(f"ROUND {i + 1}")
 
             params, x = simulate_for_sbi(
                 simulator, proposal, num_simulations, num_workers=self.num_workers
@@ -88,10 +93,10 @@ class SbiBackend(AbstractInferenceClass):
             zero_counter = torch.sum(torch.all(x == 0, dim=1)).item()
             break_counter = torch.sum(torch.all(x == 1, dim=1)).item()
             print(
-                f"\n{zero_counter} zero occurrences out of {num_simulations} simulations ({zero_counter/num_simulations*100:.2f}%)"
+                f"\n{zero_counter} zero occurrences out of {num_simulations} simulations ({zero_counter / num_simulations * 100:.2f}%)"
             )
             print(
-                f"{break_counter} BREAK occurrences out of {num_simulations} simulations ({break_counter/num_simulations*100:.2f}%)\n"
+                f"{break_counter} BREAK occurrences out of {num_simulations} simulations ({break_counter / num_simulations * 100:.2f}%)\n"
             )
             if num_rounds == 1:
                 density_estimator = inference.append_simulations(params, x).train()
@@ -159,4 +164,14 @@ class SbiBackend(AbstractInferenceClass):
         summary_df.to_csv(output_dir.joinpath("posterior_summary.csv"))
 
     def plot_results(self, data, observed_values, output_dir):
-        pass
+        pp_samples_xr = xr.DataArray(
+            data["posterior_predictive"], dims=["sample", "stat"]
+        )
+
+        plot_posterior_predictive_stats(
+            pp_samples_xr, obs_value=observed_values, output_dir=output_dir
+        )
+
+        plot_combined_hpdi([data["posterior_samples"]], output_dir=output_dir)
+
+        plot_marginal_posterior(data["posterior_samples"], output_dir=output_dir)

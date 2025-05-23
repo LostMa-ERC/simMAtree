@@ -49,9 +49,9 @@ class ConstrainedUniform(Distribution):
             self.std_val = torch.std(samples, dim=0)
 
         # Dimension du prior est 4: [LDA, lda, gamma, mu]
-        assert (
-            low.shape[-1] == 4 and high.shape[-1] == 4
-        ), "Les paramètres doivent être de dimension 4"
+        assert low.shape[-1] == 4 and high.shape[-1] == 4, (
+            "Les paramètres doivent être de dimension 4"
+        )
 
         batch_shape = self.base_dist.batch_shape
         event_shape = self.base_dist.event_shape
@@ -87,7 +87,8 @@ class ConstrainedUniform(Distribution):
         constraint2 = x[..., 2] < x[..., 1]
 
         # Contrainte 3: E[population d'un arbre] < 10^4
-        constraint3 = avg_yule_pop(x[..., 1], x[..., 2], x[..., 3], 1000, 1000) <= 10**5
+        # TODO: Must be change according to the hyperparameters!
+        constraint3 = avg_yule_pop(x[..., 1], x[..., 2], x[..., 3], 1000, 1000) <= 10**4
 
         return constraint1 & constraint2 & constraint3
 
