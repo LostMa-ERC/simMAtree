@@ -1,6 +1,9 @@
 import numpy as np
 import pymc as pm
 from pytensor.tensor.variable import TensorVariable
+import torch
+from sbi.utils.user_input_checks import process_prior
+
 
 from src.models.base_model import AbstractModelClass
 from src.models.constants import PyMCPriors
@@ -32,10 +35,10 @@ class BirthDeathPoisson(AbstractModelClass):
         witness_nb = self.simulate_pop(rng, params)
         try:
             if not witness_nb:
-                return np.zeros(6)
-            stats = compute_stat_witness(witness_nb)
+                return np.zeros(13) if additional_stats else np.zeros(6)
+            stats = compute_stat_witness(witness_nb, additional_stats)
             if not np.all(np.isfinite(stats)):
-                return np.zeros(6)
+                return np.zeros(13) if additional_stats else np.zeros(6)
             return stats
         except Exception as e:
             print(f"Error in simulate_tree_stats: {e}")
@@ -44,9 +47,7 @@ class BirthDeathPoisson(AbstractModelClass):
 
     def simulate_pop(self, rng, params):
         # Required method, inherited from AbstractBaseClass
-        LDA = params[0]
-        lda = params[1]
-        mu = params[2]
+        LDA, lda, gamma, mu = self.process_params(params)
 
         if self.n_init > 0:
             species_counter = {i: 1 for i in range(self.n_init)}
@@ -114,3 +115,62 @@ class BirthDeathPoisson(AbstractModelClass):
             return list(final_species_count.values())
         else:
             return []
+
+    def validate_params(self, params):
+        """Valide les paramètres pour le modèle Yule"""
+        try:
+            LDA, lda, gamma, mu = self.process_params(params)
+
+            if (
+                LDA < 0
+                or np.isnan(LDA)
+                or lda < 0
+                or np.isnan(lda)
+                or gamma < 0
+                or np.isnan(gamma)
+                or mu < 0
+                or np.isnan(mu)
+            ):
+                raise ValueError("Paramètres invalides détectés")
+
+            if not (lda + gamma > mu and gamma < lda):
+                raise ValueError("Contraintes du modèle non respectées")
+
+            return params
+        except ValueError:
+            raise
+
+    def get_sbi_priors(self, device="cpu"):
+        from src.models.distribution import ConstrainedUniform
+
+        # LDA, lda, gamma, mu
+        lower_bounds = torch.tensor([0.0, 0.0, 0.0, 0.0], device=device)
+        upper_bounds = torch.tensor([1e-10, 0.02, 1e-10, 0.015], device=device)
+
+        prior = ConstrainedUniform(lower_bounds, upper_bounds, device=device)
+        prior, num_parameters, prior_returns_numpy = process_prior(prior)
+        return prior
+
+    def process_params(self, params):
+        # TODO: Check where the params are generated and see if the data type
+        # can be replaced by something more stable (dataclass, Pydantic model,
+        # namedtuple, etc.)
+        if isinstance(params, torch.Tensor):
+            LDA = params[0].item()
+            lda = params[1].item()
+            gamma = params[2].item()
+            mu = params[3].item()
+        else:
+            LDA = params[0]
+            lda = params[1]
+            gamma = params[2]
+            mu = params[3]
+            try:
+                if not isinstance(LDA, float) and hasattr(LDA, "__getitem__"):
+                    LDA = LDA[0]
+                    lda = lda[0]
+                    gamma = gamma[0]
+                    mu = mu[0]
+            except Exception:
+                pass
+        return LDA, lda, gamma, mu
