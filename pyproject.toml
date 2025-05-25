@@ -44,7 +44,7 @@ members = [
 ]
 
 [project.urls]
-Repository = "https://github.com/LostMa-ERC/BayesYule.git"
+Repository = "https://github.com/LostMa-ERC/simMAtree.git"
 
 [project.scripts]
 bule = "src.__main__:cli"
