@@ -48,7 +48,7 @@ dev = [
 ]
 
 [project.urls]
-Repository = "https://github.com/LostMa-ERC/BayesYule.git"
+Repository = "https://github.com/LostMa-ERC/simMAtree.git"
 
 [project.scripts]
 simmatree = "src.__main__:cli"
