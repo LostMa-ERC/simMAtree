@@ -60,7 +60,7 @@ No matter the task in your experiment, prepare a configuration YAML file. Follow
 
 When running any of the `simmatree` tasks, you'll need to provide your experiment's configuration file.
 
-### Data Generation
+### `generate` data
 
 Generate synthetic witness data and write it to a CSV file.
 
@@ -88,7 +88,7 @@ params:
 simmatree -c <CONFIG FILE> generate -o <OUTPUT FILE>
 ```
 
-### Inference
+### `infer` trees
 
 Run inference on witness data.
 
@@ -121,7 +121,7 @@ inference:
 simmatree -c <CONFIG FILE> infer -i <DATA FILE> -o <OUTPUT DIRECTORY>
 ```
 
-### Score
+### `score` inference
 
 Evaluate inference results against known parameters.
 
