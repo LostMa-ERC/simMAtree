@@ -6,7 +6,7 @@ from src.utils.yule import avg_yule_pop
 
 
 class ConstrainedUniform(Distribution):
-    def __init__(self, low, high, device=None):
+    def __init__(self, low, high, constraints_params=None, device=None):
         """
         Prior uniforme pour paramètres LDA, lda, gamma, mu avec contraintes:
         - lda + gamma > mu
@@ -30,6 +30,11 @@ class ConstrainedUniform(Distribution):
             high = torch.tensor(high, dtype=torch.float32, device=device)
         else:
             high = high.to(device)
+
+        if constraints_params is None:
+            self.constraints_params = [1, 1000, 1000, 10**4]
+        else:
+            self.constraints_params = constraints_params
 
         self._low = low
         self._high = high
@@ -86,9 +91,17 @@ class ConstrainedUniform(Distribution):
         # Contrainte 2: gamma < lda (indices 1, 2)
         constraint2 = x[..., 2] < x[..., 1]
 
-        # Contrainte 3: E[population d'un arbre] < 10^4
-        # TODO: Must be change according to the hyperparameters!
-        constraint3 = avg_yule_pop(x[..., 1], x[..., 2], x[..., 3], 1000, 1000) <= 10**4
+        # Contrainte 3: E[population d'un arbre] < max_pop
+        constraint3 = (
+            avg_yule_pop(
+                x[..., 1],
+                x[..., 2],
+                x[..., 3],
+                self.constraints_params[1],
+                self.constraints_params[2],
+            )
+            <= self.constraints_params[3] / self.constraints_params[0]
+        )
 
         if debug:
             print(

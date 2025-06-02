@@ -149,7 +149,12 @@ class YuleModel(AbstractModelClass):
         lower_bounds = torch.tensor([0.0, 0.0, 0.0, 0.0], device=device)
         upper_bounds = torch.tensor([2, 0.015, 0.01, 0.01], device=device)
 
-        prior = ConstrainedUniform(lower_bounds, upper_bounds, device=device)
+        prior = ConstrainedUniform(
+            lower_bounds,
+            upper_bounds,
+            constraints_params=[self.n_init, self.Nact, self.Ninact, self.max_pop],
+            device=device,
+        )
         prior, num_parameters, prior_returns_numpy = process_prior(prior)
         return prior
 

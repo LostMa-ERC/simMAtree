@@ -1,9 +1,8 @@
 import numpy as np
 import pymc as pm
-from pytensor.tensor.variable import TensorVariable
 import torch
+from pytensor.tensor.variable import TensorVariable
 from sbi.utils.user_input_checks import process_prior
-
 
 from src.models.base_model import AbstractModelClass
 from src.models.constants import PyMCPriors
@@ -147,7 +146,12 @@ class BirthDeathPoisson(AbstractModelClass):
         lower_bounds = torch.tensor([0.0, 0.0, 0.0, 0.0], device=device)
         upper_bounds = torch.tensor([1e-10, 0.02, 1e-10, 0.015], device=device)
 
-        prior = ConstrainedUniform(lower_bounds, upper_bounds, device=device)
+        prior = ConstrainedUniform(
+            lower_bounds,
+            upper_bounds,
+            constraints_params=[self.n_init, self.Nact, self.Ninact, self.max_pop],
+            device=device,
+        )
         prior, num_parameters, prior_returns_numpy = process_prior(prior)
         return prior
 
