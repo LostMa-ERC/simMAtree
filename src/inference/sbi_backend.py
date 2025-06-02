@@ -6,6 +6,7 @@ import sbi.inference
 import torch
 import xarray as xr
 from sbi.inference import simulate_for_sbi
+from sbi.utils import RestrictedPrior, get_density_thresholder
 from sbi.utils.user_input_checks import check_sbi_inputs, process_simulator
 
 from src.inference.base_backend import AbstractInferenceClass
@@ -98,15 +99,18 @@ class SbiBackend(AbstractInferenceClass):
             print(
                 f"{break_counter} BREAK occurrences out of {num_simulations} simulations ({break_counter / num_simulations * 100:.2f}%)\n"
             )
+
             if num_rounds == 1:
                 density_estimator = inference.append_simulations(params, x).train()
             else:
                 density_estimator = inference.append_simulations(
-                    params, x, proposal=proposal
-                ).train()
-            posterior = inference.build_posterior(density_estimator)
+                    params, x, proposal
+                ).train(force_first_round_loss=True)
+            posterior = inference.build_posterior(density_estimator).set_default_x(x_o)
             posteriors.append(posterior)
-            proposal = posterior.set_default_x(x_o)
+
+            accept_reject_fn = get_density_thresholder(posterior, quantile=1e-4)
+            proposal = RestrictedPrior(prior, accept_reject_fn, sample_with="rejection")
 
         # Get samples from the posterior
         num_samples = 1000

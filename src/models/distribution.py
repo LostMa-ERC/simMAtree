@@ -79,7 +79,7 @@ class ConstrainedUniform(Distribution):
             valid, normalized_log_prob, torch.tensor(-float("inf"), device=value.device)
         )
 
-    def _check_constraints(self, x):
+    def _check_constraints(self, x, debug=False):
         # Contrainte 1: lda + gamma > mu (indices 1, 2, 3)
         constraint1 = x[..., 1] + x[..., 2] > x[..., 3]
 
@@ -89,6 +89,35 @@ class ConstrainedUniform(Distribution):
         # Contrainte 3: E[population d'un arbre] < 10^4
         # TODO: Must be change according to the hyperparameters!
         constraint3 = avg_yule_pop(x[..., 1], x[..., 2], x[..., 3], 1000, 1000) <= 10**4
+
+        if debug:
+            print(
+                f"Constraint 1 (lda+gamma>mu) failures: {(~constraint1).sum().item()}"
+            )
+            print(f"Constraint 2 (gamma<lda) failures: {(~constraint2).sum().item()}")
+            print(
+                f"Constraint 3 (avg_pop<=10^5) failures: {(~constraint3).sum().item()}"
+            )
+
+            failed_indices = torch.where(~(constraint1 & constraint2 & constraint3))[0][
+                :5
+            ]
+            for idx in failed_indices:
+                sample = x[idx]  # Garder comme tensor
+                lda, gamma, mu = sample[1], sample[2], sample[3]
+                avg_pop = avg_yule_pop(lda, gamma, mu, 1000, 1000)
+                print(
+                    f"Sample {idx}: lda={lda.item():.6f}, gamma={gamma.item():.6f}, mu={mu.item():.6f}"
+                )
+                print(
+                    f"  lda+gamma={(lda + gamma).item():.6f} > mu={mu.item():.6f}? {(lda + gamma > mu).item()}"
+                )
+                print(
+                    f"  gamma={gamma.item():.6f} < lda={lda.item():.6f}? {(gamma < lda).item()}"
+                )
+                print(
+                    f"  avg_pop={avg_pop.item():.2f} <= 10^5? {(avg_pop <= 10**5).item()}"
+                )
 
         return constraint1 & constraint2 & constraint3
 
