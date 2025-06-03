@@ -1,6 +1,6 @@
 import unittest
 
-from src.models.birth_death_poisson import BirthDeathPoisson
+from src.models.birth_death_poisson import BirthDeath
 from src.models.yule_model import YuleModel
 
 BASIC_MODEL_CONFIG = {
@@ -28,12 +28,12 @@ class ModelInheritanceTest(unittest.TestCase):
         self.assertIsInstance(model, YuleModel)
 
     def test_bdp_with_params(self):
-        model = BirthDeathPoisson(**FULL_MODEL_CONFIG)
-        self.assertIsInstance(model, BirthDeathPoisson)
+        model = BirthDeath(**FULL_MODEL_CONFIG)
+        self.assertIsInstance(model, BirthDeath)
 
     def test_bdp_without_params(self):
-        model = BirthDeathPoisson(**BASIC_MODEL_CONFIG)
-        self.assertIsInstance(model, BirthDeathPoisson)
+        model = BirthDeath(**BASIC_MODEL_CONFIG)
+        self.assertIsInstance(model, BirthDeath)
 
 
 if __name__ == "__main__":

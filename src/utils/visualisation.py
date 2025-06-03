@@ -155,7 +155,7 @@ def plot_combined_hpdi(samples_list, output_dir, dataset_names=None, true_values
                         linestyle="--",
                         linewidth=2,
                         alpha=0.8,
-                        label="True value" if i == 3 else None,
+                        label="True value" if i == n_dims - 1 else None,
                     )
 
                     # Ajouter un marqueur pour la vraie valeur
@@ -241,7 +241,10 @@ def plot_combined_hpdi(samples_list, output_dir, dataset_names=None, true_values
                 ax.grid(alpha=0.2, linestyle="--")
             else:  # Triangle supérieur: laisser vide
                 ax.set_visible(False)
-    axes[3, 3].legend(loc="upper right", fontsize=9, framealpha=0.9)
+    if true_values is not None:
+        axes[n_dims - 1, n_dims - 1].legend(
+            loc="upper right", fontsize=9, framealpha=0.9
+        )
     plt.savefig(output_dir.joinpath("pairplot"), dpi=300, bbox_inches="tight")
 
 

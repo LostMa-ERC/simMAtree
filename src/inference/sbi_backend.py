@@ -56,8 +56,9 @@ class SbiBackend(AbstractInferenceClass):
         # Define simulator wrapper
         def sbi_simulator_wrapper(params):
             try:
-                validated_params = model.validate_params(params)
-                result = model.get_simulator(self.rng, validated_params)
+                if not model.generator.validate_params(params):
+                    raise ValueError(f"Unvalidated parameters: {params}")
+                result = model.get_simulator(self.rng, params)
                 return torch.tensor(result, dtype=torch.float32)
             except ValueError:
                 return torch.zeros(13, dtype=torch.float32)
@@ -109,7 +110,9 @@ class SbiBackend(AbstractInferenceClass):
             posterior = inference.build_posterior(density_estimator).set_default_x(x_o)
             posteriors.append(posterior)
 
-            accept_reject_fn = get_density_thresholder(posterior, quantile=1e-4)
+            accept_reject_fn = get_density_thresholder(
+                posterior, quantile=1e-4, num_samples_to_estimate_support=100000
+            )
             proposal = RestrictedPrior(prior, accept_reject_fn, sample_with="rejection")
 
         # Get samples from the posterior
@@ -122,7 +125,7 @@ class SbiBackend(AbstractInferenceClass):
 
         print("Running posterior predictive checks...")
         _, pp_samples = simulate_for_sbi(
-            simulator, proposal, self.num_samples, num_workers=self.num_workers
+            simulator, posterior, self.num_samples, num_workers=self.num_workers
         )
 
         pp_samples = np.array(pp_samples)

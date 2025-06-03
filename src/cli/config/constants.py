@@ -5,7 +5,7 @@ from pydantic import BaseModel, Field
 
 class ModelImports(Enum):
     YULE = ("src.models.yule_model", "YuleModel")
-    BIRTHDEATHPOISSON = ("src.models.birth_death_poisson", "BirthDeathPoisson")
+    BIRTHDEATH = ("src.models.birth_death_poisson", "BirthDeath")
     PYMC = ("src.inference.pymc_backend", "PymcBackend")
     SBI = ("src.inference.sbi_backend", "SbiBackend")
 

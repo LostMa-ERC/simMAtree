@@ -7,7 +7,7 @@
 [![License: CC BY-SA 4.0](https://img.shields.io/badge/License-CC_BY--SA_4.0-lightgrey.svg)](https://creativecommons.org/licenses/by-sa/4.0/)
 
 ## Description
-This repository performs an Approximate Bayesian Computation algorithm on witness distribution data modeled by a Yule process, using PyMC library.
+This repository performs an Approximate Bayesian Computation algorithm on witness distribution data modeled by a Yule process, using SBI library.
 
 ## Contributing 🔧
 
@@ -210,7 +210,7 @@ Parameters:
 - `gamma`: Probability of speciation
 - `mu`: Probability of death
 
-### BirthDeathPoisson
+### BirthDeath
 A simpler model with Poisson-distributed events.
 
 Parameters:
@@ -219,17 +219,6 @@ Parameters:
 - `mu`: Probability of death
 
 ## Inference Backends
-
-### PyMC Backend
-Uses Approximate Bayesian Computation with Sequential Monte Carlo through PyMC.
-
-Configuration parameters:
-- `draws`: Number of samples to draw
-- `chains`: Number of MCMC chains
-- `random_seed`: Random seed for reproducibility
-- `epsilon`: Epsilon value for ABC inference
-- `sum_stat`: Summary statistics type
-- `distance`: Distance metric for ABC
 
 ### SBI Backend
 Uses simulation-based inference with neural networks through the SBI library.
@@ -259,7 +248,6 @@ The project uses several summary statistics to analyze witness distributions:
 The script generates:
 1. `pp_summaries.png`: Visualization of posterior predictive checks of different statistics
 2. `results_summary.csv`: Statistical summary of inference results
-3. `traces.png`: MCMC trace plots (PyMC backend only)
 4. `posterior.png`: Posterior distribution plots
 5. `posterior_pairs.png`: Pair plots showing parameter correlations
 6. Posterior samples saved as NumPy arrays

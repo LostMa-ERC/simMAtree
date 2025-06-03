@@ -1,12 +1,6 @@
-
 import numpy as np
-import torch
 
 from src.utils.stats import compute_stat_witness
-
-
-def avg_yule_pop(lamb, gamma, mu, Ta, Ti):
-    return torch.exp((lamb + gamma + mu) * Ta - mu * Ti)
 
 
 def generate_yule_pop_alternative(rng, LDA, K, r, mu, Nact, Ninact, n_init, max_pop):

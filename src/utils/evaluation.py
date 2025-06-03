@@ -44,11 +44,10 @@ def evaluate_inference(true_params, results_dir, param_names=None):
         hpdi_values = results_summary["hpdi_95%"]
         posterior_mean = results_summary["mean"]
 
-    except (FileNotFoundError, KeyError):
-        print(
-            f"Erreur: Impossible de trouver les valeurs HPDI dans {results_dir}/posterior_summary.csv"
-        )
-        return None
+    except (FileNotFoundError, KeyError) as e:
+        raise RuntimeError(
+            f"Unable to find estimates, please ensure that the inference has been performed upstream and that the results are located in the folder {results_dir}."
+        ) from e
 
     try:
         obs_values = np.load(f"{results_dir}/obs_values.npy")

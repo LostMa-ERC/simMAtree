@@ -3,13 +3,13 @@ import json
 import numpy as np
 import pandas as pd
 
-from src.models import BirthDeathPoisson, YuleModel
+from src.models import BirthDeath, YuleModel
 from src.utils.stats import compute_stat_witness, inverse_compute_stat_witness
 
 
 def generate(
     data_path: str,
-    model: YuleModel | BirthDeathPoisson,
+    model: YuleModel | BirthDeath,
     parameters,
     seed: int = 42,
     show_params: bool = False,
@@ -23,7 +23,7 @@ def generate(
 
     print("Generating population...")
 
-    pop = model.simulate_pop(rng, list(parameters.values()))
+    pop = model.generator.generate(rng, parameters)
     if pop == []:
         print("No survivors in the simulation!")
         return False

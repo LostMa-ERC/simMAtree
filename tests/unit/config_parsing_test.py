@@ -25,10 +25,10 @@ class ConfigImportsTest(unittest.TestCase):
         self.assertEqual(model, YuleModel)
 
     def test_birth_death_poisson_model_import(self):
-        from src.models.birth_death_poisson import BirthDeathPoisson
+        from src.models.birth_death_poisson import BirthDeath
 
-        model = Config.import_class(name="BirthDeathPoisson")
-        self.assertEqual(model, BirthDeathPoisson)
+        model = Config.import_class(name="BirthDeath")
+        self.assertEqual(model, BirthDeath)
 
     def test_pymc_model_import(self):
         from src.inference.pymc_backend import PymcBackend

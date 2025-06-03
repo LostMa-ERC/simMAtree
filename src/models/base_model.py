@@ -1,10 +1,8 @@
 from abc import ABC, abstractmethod
+from typing import Union
 
 import numpy as np
-import pymc as pm
 import torch
-
-from src.models.constants import PyMCPriors
 
 
 class AbstractModelClass(ABC):
@@ -34,18 +32,12 @@ class AbstractModelClass(ABC):
         self.mu = mu
 
     @abstractmethod
-    def get_pymc_priors(self, model: pm.Model) -> PyMCPriors:
-        """Définit et retourne les priors du modèle"""
-        pass
-
-    @abstractmethod
-    def get_constraints(self, model: pm.Model, params: PyMCPriors):
-        """Définit et retourne les contraintes du modèle"""
-        pass
-
-    @abstractmethod
-    def get_simulator(self, rng: np.random.default_rng, params: PyMCPriors):
-        """Définit et retourne les priors du modèle"""
+    def get_simulator(
+        self, rng: np.random.default_rng, params: Union[list, tuple, dict]
+    ):
+        """
+        Définit et retourne les priors du modèle
+        """
         pass
 
     def sample_from_prior(self, n_samples=1, device="cpu", param_names=None):
