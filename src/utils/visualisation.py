@@ -246,6 +246,7 @@ def plot_combined_hpdi(samples_list, output_dir, dataset_names=None, true_values
             loc="upper right", fontsize=9, framealpha=0.9
         )
     plt.savefig(output_dir.joinpath("pairplot"), dpi=300, bbox_inches="tight")
+    plt.close()
 
 
 def plot_marginal_posterior(samples, output_dir, hpdi_point=None, true_value=None):
@@ -299,7 +300,9 @@ def plot_marginal_posterior(samples, output_dir, hpdi_point=None, true_value=Non
 def plot_posterior_predictive_stats(
     samples: az.InferenceData, output_dir: Path, obs_value=None
 ):
-    """Crée et sauvegarde les distributions postérieures"""
+    """
+    Creates and saves posterior distributions
+    """
     flat_samples = samples.values.reshape(-1, samples.shape[-1])
     processed = np.array(
         [inverse_compute_stat_witness(s) for s in flat_samples],
@@ -324,8 +327,17 @@ def plot_posterior_predictive_stats(
 
     for i, (name, color) in enumerate(zip(metric_names, colors)):
         if i < processed.shape[1]:
+            data = processed[:, i]
+            upper_bound = 1e5
+            mask = data <= upper_bound
+            filtered_data = data[mask]
+            n_excluded = len(data) - len(filtered_data)
+            if n_excluded > 0:
+                print(
+                    f"{name}: {n_excluded} outlier values excluded (>{upper_bound:.0f})"
+                )
             sns.histplot(
-                data=processed[:, i],
+                data=filtered_data,
                 ax=axes[i],
                 color=color,
                 stat="count",
@@ -334,26 +346,50 @@ def plot_posterior_predictive_stats(
             )
 
             axes[i].set_title(name, fontsize=12, pad=10)
-            axes[i].set_xlabel("Valeur")
+            axes[i].set_xlabel("Value")
             axes[i].set_ylabel("Count")
-
-            median_val = np.median(processed[:, i])
-
+            median_val = np.median(filtered_data)
             axes[i].axvline(median_val, color="green", linestyle="--", alpha=0.5)
-
             if obs_value is not None:
                 true_val = obs_value[i]
-                axes[i].axvline(
-                    true_val, color="red", linestyle="-", alpha=0.8, label="Observation"
-                )
+                if true_val <= upper_bound:
+                    axes[i].axvline(
+                        true_val,
+                        color="red",
+                        linestyle="-",
+                        alpha=0.8,
+                        label="Observation",
+                    )
+                    axes[i].text(
+                        0.95,
+                        0.95,
+                        f"Observation: {true_val:.2e}\nMedian: {median_val:.2e}",
+                        transform=axes[i].transAxes,
+                        verticalalignment="top",
+                        horizontalalignment="right",
+                        bbox=dict(facecolor="white", alpha=0.8),
+                    )
+                else:
+                    axes[i].text(
+                        0.95,
+                        0.95,
+                        f"Observation: {true_val:.2e} (out of scale)\nMedian: {median_val:.2e}",
+                        transform=axes[i].transAxes,
+                        verticalalignment="top",
+                        horizontalalignment="right",
+                        bbox=dict(facecolor="white", alpha=0.8),
+                    )
+            # Add info about excluded values if necessary
+            if n_excluded > 0:
                 axes[i].text(
+                    0.05,
                     0.95,
-                    0.95,
-                    f"Observation: {true_val:.2e}\nMédiane: {median_val:.2e}",
+                    f"{n_excluded} values > {upper_bound:.0f} excluded",
                     transform=axes[i].transAxes,
                     verticalalignment="top",
-                    horizontalalignment="right",
-                    bbox=dict(facecolor="white", alpha=0.8),
+                    horizontalalignment="left",
+                    bbox=dict(facecolor="yellow", alpha=0.3),
+                    fontsize=8,
                 )
 
     if len(metric_names) < 6:
