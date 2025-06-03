@@ -332,10 +332,8 @@ def plot_posterior_predictive_stats(
             mask = data <= upper_bound
             filtered_data = data[mask]
             n_excluded = len(data) - len(filtered_data)
-            if n_excluded > 0:
-                print(
-                    f"{name}: {n_excluded} outlier values excluded (>{upper_bound:.0f})"
-                )
+            if i == 1 and n_excluded > 0:
+                print(f"{n_excluded} outlier values excluded (>{upper_bound:.0f})")
             sns.histplot(
                 data=filtered_data,
                 ax=axes[i],
@@ -380,7 +378,7 @@ def plot_posterior_predictive_stats(
                         bbox=dict(facecolor="white", alpha=0.8),
                     )
             # Add info about excluded values if necessary
-            if n_excluded > 0:
+            if i == 1 and n_excluded > 0:
                 axes[i].text(
                     0.05,
                     0.95,
@@ -388,7 +386,7 @@ def plot_posterior_predictive_stats(
                     transform=axes[i].transAxes,
                     verticalalignment="top",
                     horizontalalignment="left",
-                    bbox=dict(facecolor="yellow", alpha=0.3),
+                    bbox=dict(facecolor="white", alpha=0.3),
                     fontsize=8,
                 )
 
