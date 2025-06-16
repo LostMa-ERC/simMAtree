@@ -72,9 +72,8 @@ class BirthDeath(AbstractModelClass):
             return np.zeros(6)
 
     def get_sbi_priors(self, device="cpu"):
-        # LDA, lda, gamma, mu
         lower_bounds = torch.tensor([0.0, 0.0], device=device)
-        upper_bounds = torch.tensor([0.02, 0.015], device=device)
+        upper_bounds = torch.tensor([0.005, 0.005], device=device)
 
         prior = ConstrainedUniform2DPrior(
             lower_bounds,

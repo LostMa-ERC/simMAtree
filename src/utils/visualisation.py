@@ -62,7 +62,13 @@ def plot_sbi_pairplot(samples, output_dir, hpdi_point=None):
     plt.close()
 
 
-def plot_combined_hpdi(samples_list, output_dir, dataset_names=None, true_values=None):
+def plot_combined_hpdi(
+    samples_list,
+    output_dir,
+    dataset_names=None,
+    true_values=None,
+    param_names=[r"$\Lambda$", r"$\lambda$", r"$\gamma$", r"$\mu$"],
+):
     n_datasets = len(samples_list)
 
     # colors = sns.color_palette("tab10", n_datasets)
@@ -80,8 +86,6 @@ def plot_combined_hpdi(samples_list, output_dir, dataset_names=None, true_values
 
     # Déterminer les dimensions
     n_dims = samples_list[0].shape[1]
-
-    param_names = [r"$\Lambda$", r"$\lambda$", r"$\gamma$", r"$\mu$"]
 
     fig = plt.figure(figsize=(3 * n_dims, 3 * n_dims), dpi=100)
     gs = fig.add_gridspec(n_dims, n_dims, wspace=0.3, hspace=0.3)
@@ -320,7 +324,7 @@ def plot_posterior_predictive_stats(
         "Number of works",
         "Max. number of witnesses per work",
         "Med. number of witnesses per work",
-        "Number of witnesses with one work",
+        "Number of work with one witness",
     ]
 
     colors = sns.color_palette("husl", 5)

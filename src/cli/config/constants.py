@@ -11,7 +11,7 @@ class ModelImports(Enum):
 
 
 class ExperimentParamters(BaseModel):
-    LDA: float
+    LDA: float | None = Field(default=None)
     lda: float
     gamma: float | None = Field(default=None)
     mu: float

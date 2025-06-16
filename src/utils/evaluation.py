@@ -168,7 +168,10 @@ def evaluate_inference(true_params, results_dir, param_names=None):
     )
 
     plot_combined_hpdi(
-        [posterior_samples], output_dir=results_dir, true_values=true_params
+        [posterior_samples],
+        output_dir=results_dir,
+        true_values=true_params,
+        param_names=param_names,
     )
 
     plot_marginal_posterior(
