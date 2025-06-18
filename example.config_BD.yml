@@ -1,0 +1,43 @@
+## Configuration file for a Bayes-Yule experiment
+
+# Setup for the generator
+generator:
+  name: BirthDeathAbundance # "YuleAbundance" or "BirthDeathAbundance"
+  config:
+    n_init: 200
+    Nact: 1000
+    Ninact: 1000
+    max_pop: 100000
+
+# Summary statistics that will be given as input to the inference
+stats: 
+  name: "Abundance"
+  config:
+    additional_stats: True
+
+# Prior distribution for the parameters
+prior:
+  # TODO : Pouvoir faire en sorte que n'importe quel distribution déjà existante dans Pytorch puisse être renseigné ici
+  # TODO : Vérifier que le prior est de dimension égale au nombre de paramètre du modèle
+  name: "ConstrainedUniform2D"
+  config:
+    low: [0.0, 0.0]
+    high: [0.01, 0.01] # [2.0, 0.015, 0.01, 0.01]
+
+# Ground truth for scoring and generation
+params:
+  # TODO : Vérifier que le nombre de paramètre est égal au nombre de paramètre du modèle
+  lda: 0.009
+  mu: 0.0033
+
+# Set up for the inference backend
+inference:
+  name: SBI # "SBI"
+  config:
+    method : NPE
+    num_simulations : 1000
+    num_rounds : 2
+    random_seed : 42
+    num_samples : 500
+    num_workers : 10
+    device : cpu  

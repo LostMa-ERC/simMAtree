@@ -10,7 +10,7 @@ class YamlParsingTest(unittest.TestCase):
 
     def test_example_yaml(self):
         from src.inference.sbi_backend import SbiBackend
-        from src.models.yule_model import YuleModel
+        from src.stats.yule_model import YuleModel
 
         self.assertIsInstance(self.conf.model, YuleModel)
         self.assertIsInstance(self.conf.backend, SbiBackend)
@@ -19,22 +19,16 @@ class YamlParsingTest(unittest.TestCase):
 
 class ConfigImportsTest(unittest.TestCase):
     def test_yule_model_import(self):
-        from src.models.yule_model import YuleModel
+        from src.stats.yule_model import YuleModel
 
         model = Config.import_class(name="Yule")
         self.assertEqual(model, YuleModel)
 
     def test_birth_death_poisson_model_import(self):
-        from src.models.birth_death_poisson import BirthDeath
+        from stats.abundance_stats import BirthDeath
 
         model = Config.import_class(name="BirthDeath")
         self.assertEqual(model, BirthDeath)
-
-    def test_pymc_model_import(self):
-        from src.inference.pymc_backend import PymcBackend
-
-        model = Config.import_class(name="PYMC")
-        self.assertEqual(model, PymcBackend)
 
     def test_sbi_model_import(self):
         from src.inference.sbi_backend import SbiBackend

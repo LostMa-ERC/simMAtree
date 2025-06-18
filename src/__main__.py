@@ -40,13 +40,17 @@ def test_installation():
 @click.option("-s", "--separator", required=False, default=";", type=click.STRING)
 @click.pass_obj
 def infer_command(config: Config, infile: str, outdir: str, separator: str):
-    model = config.model
+    generator = config.generator
+    stats = config.stats
+    prior = config.prior
     backend = config.backend
     dir = Path(outdir)
     dir.mkdir(exist_ok=True)
     inference(
         csv_file=infile,
-        model=model,
+        generator=generator,
+        stats=stats,
+        prior=prior,
         backend=backend,
         dir=dir,
         csv_separator=separator,
@@ -71,12 +75,14 @@ def infer_command(config: Config, infile: str, outdir: str, separator: str):
 @click.option("--show-params", default=False, help="Display parameters in JSON format")
 @click.pass_obj
 def generate_command(config: Config, outfile: str, seed: int, show_params: bool):
-    model = config.model
+    generator = config.generator
     params = config.params
+    stats = config.stats
     generate(
         data_path=outfile,
-        model=model,
+        generator=generator,
         parameters=params,
+        stats=stats,
         seed=seed,
         show_params=show_params,
     )

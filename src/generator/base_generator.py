@@ -18,7 +18,7 @@ class BaseGenerator(ABC):
         self,
         rng: np.random.Generator,
         params: Union[list, tuple, dict],
-        hyperparams: Union[list, tuple, dict],
+        verbose: bool = False,
     ) -> Any:
         """
         Generate a population according to a model
@@ -28,8 +28,6 @@ class BaseGenerator(ABC):
         rng : np.random.Generator
             Random generator
         params : Union[list, tuple, dict]
-            Parameters of the model (lda, mu, gamma, etc.)
-        hyperparams : Union[list, tuple, dict]
             Parameters of the model (lda, mu, gamma, etc.)
 
         Returns
@@ -53,6 +51,42 @@ class BaseGenerator(ABC):
         -------
         bool
             True if parameter are valid
+        """
+        pass
+
+    @abstractmethod
+    def save_simul(self, pop: Any, df: Any) -> bool:
+        """
+        Save the simulation
+
+        Parameters
+        ----------
+        pop : Any
+            Simulation to save
+        data_path : str
+            path to save the file
+
+        Returns
+        -------
+        df
+            What has been saved
+        """
+        pass
+
+    @abstractmethod
+    def load_data(self, csv_file: str, csv_sep: str = ";") -> Any:
+        """
+        Load data from a csv file
+
+        Parameters
+        ----------
+        csv_file : str
+            Path to data
+
+        Returns
+        -------
+        Any
+            The loaded dataset
         """
         pass
 

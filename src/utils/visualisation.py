@@ -9,8 +9,6 @@ from sbi.analysis import pairplot
 from scipy.stats import gaussian_kde
 from sklearn.neighbors import KernelDensity
 
-from src.utils.stats import inverse_compute_stat_witness
-
 
 def plot_sbi_pairplot(samples, output_dir, hpdi_point=None):
     param_samples = torch.tensor(samples)
@@ -302,17 +300,12 @@ def plot_marginal_posterior(samples, output_dir, hpdi_point=None, true_value=Non
 
 
 def plot_posterior_predictive_stats(
-    samples: az.InferenceData, output_dir: Path, obs_value=None
+    samples: np.ndarray, output_dir: Path, obs_value=None
 ):
     """
     Creates and saves posterior distributions
     """
-    flat_samples = samples.values.reshape(-1, samples.shape[-1])
-    processed = np.array(
-        [inverse_compute_stat_witness(s) for s in flat_samples],
-    )
-
-    if len(processed) == 0:
+    if len(samples) == 0:
         print("No samples to plot")
         return
 
@@ -321,17 +314,17 @@ def plot_posterior_predictive_stats(
 
     metric_names = [
         "Number of witnesses",
-        "Number of works",
-        "Max. number of witnesses per work",
-        "Med. number of witnesses per work",
-        "Number of work with one witness",
+        "Number of texts",
+        "Max. number of witnesses per text",
+        "Med. number of witnesses per text",
+        "Number of text with one witness",
     ]
 
     colors = sns.color_palette("husl", 5)
 
     for i, (name, color) in enumerate(zip(metric_names, colors)):
-        if i < processed.shape[1]:
-            data = processed[:, i]
+        if i < samples.shape[1]:
+            data = samples[:, i]
             upper_bound = 1e5
             mask = data <= upper_bound
             filtered_data = data[mask]

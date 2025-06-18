@@ -4,10 +4,25 @@ from pydantic import BaseModel, Field
 
 
 class ModelImports(Enum):
-    YULE = ("src.models.yule_model", "YuleModel")
-    BIRTHDEATH = ("src.models.birth_death_poisson", "BirthDeath")
-    PYMC = ("src.inference.pymc_backend", "PymcBackend")
+    # Generators
+    YULEABUNDANCE = ("src.generator.yule_witness", "YuleWitness")
+    BIRTHDEATHABUNDANCE = ("src.generator.birth_death_witness", "BirthDeathWitness")
+
+    # Backends
     SBI = ("src.inference.sbi_backend", "SbiBackend")
+
+    # Stats
+    ABUNDANCE = ("src.stats.abundance_stats", "AbundanceStats")
+
+    # Priors
+    CONSTRAINEDUNIFORM2D = (
+        "src.priors.constrained_uniform_2D",
+        "ConstrainedUniform2DPrior",
+    )
+    CONSTRAINEDUNIFORM4D = (
+        "src.priors.constrained_uniform_4D",
+        "ConstrainedUniform4DPrior",
+    )
 
 
 class ExperimentParamters(BaseModel):

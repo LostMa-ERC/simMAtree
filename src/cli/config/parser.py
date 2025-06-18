@@ -2,8 +2,10 @@ from importlib import import_module
 
 from yaml import safe_load
 
+from src.generator import BaseGenerator
 from src.inference import AbstractInferenceClass
-from src.models import AbstractModelClass
+from src.priors import BasePrior
+from src.stats import AbstractStatsClass
 
 from .constants import ExperimentParamters, ModelImports
 from .exceptions import InvalidConfigValue
@@ -15,10 +17,25 @@ class Config(object):
             self.yaml: dict = safe_load(f)
 
     @property
-    def model(self) -> AbstractModelClass:
-        name = self.yaml["model"]["name"]
-        config = self.yaml["model"]["config"]
-        params = self.params | config
+    def stats(self) -> AbstractStatsClass:
+        if not self.yaml.get("stats"):
+            return None
+        name = self.yaml["stats"]["name"]
+        config = self.yaml["stats"]["config"]
+        return self.create_class(code_name=name, params=config)
+
+    @property
+    def generator(self) -> BaseGenerator:
+        name = self.yaml["generator"]["name"]
+        config = self.yaml["generator"]["config"]
+        return self.create_class(code_name=name, params=config)
+
+    @property
+    def prior(self) -> BasePrior:
+        name = self.yaml["prior"]["name"]
+        params = self.yaml["prior"]["config"] | {
+            "hyperparams": self.yaml["generator"]["config"]
+        }
         return self.create_class(code_name=name, params=params)
 
     @property

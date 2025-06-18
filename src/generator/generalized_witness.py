@@ -2,6 +2,7 @@ from abc import abstractmethod
 from typing import Dict, Union
 
 import numpy as np
+import pandas as pd
 
 from .base_generator import BaseGenerator
 
@@ -35,7 +36,10 @@ class GeneralizedWitnessGenerator(BaseGenerator):
         self.infer_n_trees = False
 
     def generate(
-        self, rng: np.random.Generator, params: Union[list, tuple, dict]
+        self,
+        rng: np.random.Generator,
+        params: Union[list, tuple, dict],
+        verbose: bool = False,
     ) -> Union[list, str]:
         """
         Generate survivor counts according to the generalized model
@@ -58,7 +62,18 @@ class GeneralizedWitnessGenerator(BaseGenerator):
         if not self.validate_params(params):
             raise ValueError(f"Invalid parameters for {self.__class__.__name__}")
 
-        return self._simulate_population(rng, **model_params)
+        pop = self._simulate_population(rng, **model_params)
+        if pop == []:
+            if verbose:
+                print("No survivors in the simulation!")
+            return False
+        if pop == "BREAK":
+            if verbose:
+                print("The estimation hit the maximum size during simulation...")
+                print("Estimation not saved.")
+            return False
+
+        return pop
 
     @abstractmethod
     def _extract_params(self, params: Union[list, tuple, dict]) -> Dict[str, float]:
@@ -202,3 +217,58 @@ class GeneralizedWitnessGenerator(BaseGenerator):
                 final_species_count[species] = n_survivors
 
         return list(final_species_count.values()) if final_species_count else []
+
+    def save_simul(self, pop: list, data_path: str) -> pd.DataFrame:
+        """
+        Save the simulation
+
+        Parameters
+        ----------
+        pop : list
+            Output of generate function
+        data_path : str
+            path to save the file
+
+        Returns
+        -------
+        pd.DataFrame
+            Dataframe that is saved in the CSV file.
+        """
+
+        text_val = []
+        witness_val = []
+
+        if not pop or pop is None:
+            print("An empty population is given so nothing is saved.")
+            return
+
+        for i, num in enumerate(pop):
+            for j in range(num):
+                text_val.append(f"T{i}")
+                witness_val.append(f"W{i}-{j + 1}")
+
+        # Create the dataframe
+        df = pd.DataFrame({"witness_ID": witness_val, "text_ID": text_val})
+
+        # Save to CSV file
+        df.to_csv(data_path, sep=";", index=False)
+
+        return df
+
+    def load_data(self, csv_file: str, csv_sep: str = ";") -> list:
+        """
+        Load data from a csv file
+
+        Parameters
+        ----------
+        csv_file : str
+            Path to data
+
+        Returns
+        -------
+        Any
+            The loaded dataset
+        """
+        df = pd.read_csv(csv_file, sep=csv_sep, engine="python")
+        witness_counts = df.groupby("text_ID")["witness_ID"].count()
+        return list(witness_counts)

@@ -4,13 +4,18 @@ import numpy as np
 import pandas as pd
 import sbi.inference
 import torch
-import xarray as xr
 from sbi.inference import simulate_for_sbi
 from sbi.utils import RestrictedPrior, get_density_thresholder
-from sbi.utils.user_input_checks import check_sbi_inputs, process_simulator
+from sbi.utils.user_input_checks import (
+    check_sbi_inputs,
+    process_prior,
+    process_simulator,
+)
+from torch.distributions import Distribution
 
+from src.generator import BaseGenerator
 from src.inference.base_backend import AbstractInferenceClass
-from src.models.base_model import AbstractModelClass
+from src.stats import AbstractStatsClass
 from src.utils.visualisation import (
     compute_hpdi_point,
     plot_combined_hpdi,
@@ -31,7 +36,6 @@ class SbiBackend(AbstractInferenceClass):
         device: str,
     ):
         super().__init__(random_seed=random_seed)
-        # self.device = self.inference_params.get("device", "cpu")
         self.method = method
         self.num_simulations = num_simulations
         self.num_rounds = num_rounds
@@ -39,10 +43,14 @@ class SbiBackend(AbstractInferenceClass):
         self.num_samples = num_samples
         self.num_workers = num_workers
         self.device = device
-        print(self.device)
-        # print(self.cpu)
 
-    def run_inference(self, model: AbstractModelClass, data: np.ndarray):
+    def run_inference(
+        self,
+        generator: BaseGenerator,
+        stats: AbstractStatsClass,
+        data: np.ndarray,
+        prior: Distribution,
+    ):
         print(f"Training device: {self.device}")
         simulation_device = torch.device("cpu")
         print(f"Simulation device: {simulation_device}")
@@ -50,15 +58,16 @@ class SbiBackend(AbstractInferenceClass):
         # Convert data to torch tensor
         x_o = torch.tensor(data, dtype=torch.float32).to(self.device)
 
-        # Get prior from model
-        prior = model.get_sbi_priors(device=self.device)
+        # Prior checking using SBI util function
+        prior, _, _ = process_prior(prior)
 
         # Define simulator wrapper
         def sbi_simulator_wrapper(params):
             try:
-                if not model.generator.validate_params(params):
+                if not generator.validate_params(params):
                     raise ValueError(f"Unvalidated parameters: {params}")
-                result = model.get_simulator(self.rng, params)
+                pop = result = generator.generate(self.rng, params)
+                result = stats.compute_stats(pop)
                 return torch.tensor(result, dtype=torch.float32)
             except ValueError:
                 return torch.zeros(13, dtype=torch.float32)
@@ -128,11 +137,14 @@ class SbiBackend(AbstractInferenceClass):
             simulator, posterior, self.num_samples, num_workers=self.num_workers
         )
 
-        pp_samples = np.array(pp_samples)
+        flat_samples = pp_samples.reshape(-1, pp_samples.shape[-1])
+        pp_samples_stats = np.array(
+            [stats.rescaled_stats(s) for s in flat_samples],
+        )
 
         self.results = {
             "posterior_samples": samples_np,
-            "posterior_predictive": pp_samples,
+            "posterior_predictive_stats": pp_samples_stats,
             "observed_data": x_o.numpy(),
             "parameter_names": [f"param_{i}" for i in range(samples_np.shape[1])],
             "hpdi_point": hpdi_point,
@@ -153,7 +165,7 @@ class SbiBackend(AbstractInferenceClass):
         np.save(output_dir.joinpath("obs_values.npy"), observed_values)
         np.save(
             output_dir.joinpath("posterior_predictive.npy"),
-            self.results["posterior_predictive"],
+            self.results["posterior_predictive_stats"],
         )
 
         # Calculate summary statistics
@@ -171,14 +183,10 @@ class SbiBackend(AbstractInferenceClass):
         summary_df.to_csv(output_dir.joinpath("posterior_summary.csv"))
 
     def plot_results(self, data, observed_values, output_dir):
-        pp_samples_xr = xr.DataArray(
-            data["posterior_predictive"], dims=["sample", "stat"]
-        )
-
         plot_posterior_predictive_stats(
-            pp_samples_xr, obs_value=observed_values, output_dir=output_dir
+            data["posterior_predictive_stats"],
+            obs_value=observed_values,
+            output_dir=output_dir,
         )
-
         plot_combined_hpdi([data["posterior_samples"]], output_dir=output_dir)
-
         plot_marginal_posterior(data["posterior_samples"], output_dir=output_dir)

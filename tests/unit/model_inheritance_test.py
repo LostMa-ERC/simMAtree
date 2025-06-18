@@ -1,7 +1,7 @@
 import unittest
 
-from src.models.birth_death_poisson import BirthDeath
-from src.models.yule_model import YuleModel
+from src.stats.yule_model import YuleModel
+from stats.abundance_stats import BirthDeath
 
 BASIC_MODEL_CONFIG = {
     "n_init": 1,
