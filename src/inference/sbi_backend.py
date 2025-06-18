@@ -43,6 +43,7 @@ class SbiBackend(AbstractInferenceClass):
         self.num_samples = num_samples
         self.num_workers = num_workers
         self.device = device
+        self.results = None
 
     def run_inference(
         self,
@@ -154,7 +155,7 @@ class SbiBackend(AbstractInferenceClass):
         return self.results
 
     def save_results(self, observed_values: list, output_dir: Path):
-        if self.results is None:
+        if not hasattr(self, "results") or self.results is None:
             print("Inference needs to be done before saving the results")
             return
 

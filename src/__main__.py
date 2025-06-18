@@ -72,7 +72,7 @@ def infer_command(config: Config, infile: str, outdir: str, separator: str):
     type=click.INT,
     help="Random seed for generation",
 )
-@click.option("--show-params", default=False, help="Display parameters in JSON format")
+@click.option("--show-params", is_flag=True, help="Display parameters in JSON format")
 @click.pass_obj
 def generate_command(config: Config, outfile: str, seed: int, show_params: bool):
     generator = config.generator

@@ -1,40 +1,145 @@
+import tempfile
 import unittest
+from pathlib import Path
+
+import pytest
+import yaml
 
 from src.cli.config import Config
-from tests.constants import EXAMPLE_CONFIG
+from src.generator.birth_death_witness import BirthDeathWitness
+from src.generator.yule_witness import YuleWitness
+from src.inference.sbi_backend import SbiBackend
+from src.priors.constrained_uniform_2D import ConstrainedUniform2DPrior
+from src.priors.constrained_uniform_4D import ConstrainedUniform4DPrior
+from src.stats.abundance_stats import AbundanceStats
 
 
+@pytest.mark.unit
 class YamlParsingTest(unittest.TestCase):
     def setUp(self):
-        self.conf = Config(EXAMPLE_CONFIG)
+        # Create a temporary config file for testing
+        self.yule_config = {
+            "generator": {
+                "name": "YuleAbundance",
+                "config": {"n_init": 1, "Nact": 100, "Ninact": 100, "max_pop": 1000},
+            },
+            "stats": {"name": "Abundance", "config": {"additional_stats": True}},
+            "prior": {
+                "name": "ConstrainedUniform4D",
+                "config": {
+                    "low": [0.0, 0.0, 0.0, 0.0],
+                    "high": [1.0, 0.015, 0.01, 0.01],
+                },
+            },
+            "params": {"LDA": 0.3, "lda": 0.009, "gamma": 0.001, "mu": 0.0033},
+            "inference": {
+                "name": "SBI",
+                "config": {
+                    "method": "NPE",
+                    "num_simulations": 10,
+                    "num_rounds": 1,
+                    "random_seed": 42,
+                    "num_samples": 10,
+                    "num_workers": 1,
+                    "device": "cpu",
+                },
+            },
+        }
 
-    def test_example_yaml(self):
-        from src.inference.sbi_backend import SbiBackend
-        from src.stats.yule_model import YuleModel
+        self.bd_config = {
+            "generator": {
+                "name": "BirthDeathAbundance",
+                "config": {"n_init": 1, "Nact": 100, "Ninact": 100, "max_pop": 1000},
+            },
+            "stats": {"name": "Abundance", "config": {"additional_stats": True}},
+            "prior": {
+                "name": "ConstrainedUniform2D",
+                "config": {"low": [0.0, 0.0], "high": [0.01, 0.01]},
+            },
+            "params": {"lda": 0.009, "mu": 0.0033},
+            "inference": {
+                "name": "SBI",
+                "config": {
+                    "method": "NPE",
+                    "num_simulations": 10,
+                    "num_rounds": 1,
+                    "random_seed": 42,
+                    "num_samples": 10,
+                    "num_workers": 1,
+                    "device": "cpu",
+                },
+            },
+        }
 
-        self.assertIsInstance(self.conf.model, YuleModel)
-        self.assertIsInstance(self.conf.backend, SbiBackend)
-        self.assertIsInstance(self.conf.params, dict)
+    def _create_temp_config(self, config_dict):
+        """Create a temporary config file"""
+        temp_file = tempfile.NamedTemporaryFile(mode="w", suffix=".yml", delete=False)
+        yaml.dump(config_dict, temp_file)
+        temp_file.close()
+        return temp_file.name
+
+    def test_yule_yaml_parsing(self):
+        config_path = self._create_temp_config(self.yule_config)
+        try:
+            conf = Config(config_path)
+            self.assertIsInstance(conf.generator, YuleWitness)
+            self.assertIsInstance(conf.backend, SbiBackend)
+            self.assertIsInstance(conf.stats, AbundanceStats)
+            self.assertIsInstance(conf.prior, ConstrainedUniform4DPrior)
+            self.assertEqual(len(conf.params), 4)
+        finally:
+            Path(config_path).unlink()
+
+    def test_birth_death_yaml_parsing(self):
+        config_path = self._create_temp_config(self.bd_config)
+        try:
+            conf = Config(config_path)
+            self.assertIsInstance(conf.generator, BirthDeathWitness)
+            self.assertIsInstance(conf.backend, SbiBackend)
+            self.assertIsInstance(conf.stats, AbundanceStats)
+            self.assertIsInstance(conf.prior, ConstrainedUniform2DPrior)
+            self.assertEqual(len([v for v in conf.params.values() if v is not None]), 2)
+        finally:
+            Path(config_path).unlink()
+
+    def test_parameter_consistency_validation(self):
+        """Test that config validates parameter count consistency"""
+        # This should raise an error: 4D prior with 2 parameters
+        bad_config = self.yule_config.copy()
+        bad_config["params"] = {"lda": 0.009, "mu": 0.0033}  # Only 2 params
+
+        config_path = self._create_temp_config(bad_config)
+        try:
+            with self.assertRaises(ValueError):
+                Config(config_path)
+        finally:
+            Path(config_path).unlink()
 
 
+@pytest.mark.unit
 class ConfigImportsTest(unittest.TestCase):
-    def test_yule_model_import(self):
-        from src.stats.yule_model import YuleModel
+    def test_yule_generator_import(self):
+        model = Config.import_class(name="YuleAbundance")
+        self.assertEqual(model, YuleWitness)
 
-        model = Config.import_class(name="Yule")
-        self.assertEqual(model, YuleModel)
+    def test_birth_death_generator_import(self):
+        model = Config.import_class(name="BirthDeathAbundance")
+        self.assertEqual(model, BirthDeathWitness)
 
-    def test_birth_death_poisson_model_import(self):
-        from stats.abundance_stats import BirthDeath
+    def test_sbi_backend_import(self):
+        backend = Config.import_class(name="SBI")
+        self.assertEqual(backend, SbiBackend)
 
-        model = Config.import_class(name="BirthDeath")
-        self.assertEqual(model, BirthDeath)
+    def test_stats_import(self):
+        stats = Config.import_class(name="Abundance")
+        self.assertEqual(stats, AbundanceStats)
 
-    def test_sbi_model_import(self):
-        from src.inference.sbi_backend import SbiBackend
+    def test_prior_imports(self):
+        prior_2d = Config.import_class(name="ConstrainedUniform2D")
+        self.assertEqual(prior_2d, ConstrainedUniform2DPrior)
 
-        model = Config.import_class(name="SBI")
-        self.assertEqual(model, SbiBackend)
+        prior_4d = Config.import_class(name="ConstrainedUniform4D")
+        self.assertEqual(prior_4d, ConstrainedUniform4DPrior)
 
 
 if __name__ == "__main__":
