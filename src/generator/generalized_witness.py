@@ -33,8 +33,6 @@ class GeneralizedWitnessGenerator(BaseGenerator):
         self.Ninact = Ninact
         self.max_pop = max_pop
 
-        self.infer_n_trees = False
-
     def generate(
         self,
         rng: np.random.Generator,

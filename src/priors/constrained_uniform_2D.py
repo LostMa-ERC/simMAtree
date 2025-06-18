@@ -25,6 +25,8 @@ class ConstrainedUniform2DPrior(ConstrainedUniform):
             "Parameters must be 2-dimensional."
         )
 
+        self.dimension = 2
+
         super().__init__(low, high, hyperparams, device)
 
     def _check_constraints(self, x):

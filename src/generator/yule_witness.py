@@ -15,6 +15,10 @@ class YuleWitness(GeneralizedWitnessGenerator):
     Constraints: lda > mu
     """
 
+    def __init__(self, n_init, Nact, Ninact, max_pop):
+        self.param_count = 4
+        super().__init__(n_init, Nact, Ninact, max_pop)
+
     def _extract_params(self, params):
         # TODO: Check where the params are generated and see if the data type
         # can be replaced by something more stable (dataclass, Pydantic model,

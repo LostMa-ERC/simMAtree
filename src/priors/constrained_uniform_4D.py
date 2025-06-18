@@ -27,6 +27,8 @@ class ConstrainedUniform4DPrior(ConstrainedUniform):
             "Parameters must be 4-dimensional."
         )
 
+        self.dimension = 4
+
         super().__init__(low, high, hyperparams, device)
 
     def _check_constraints(self, x):

@@ -18,15 +18,13 @@ stats:
 # Prior distribution for the parameters
 prior:
   # TODO : Pouvoir faire en sorte que n'importe quel distribution déjà existante dans Pytorch puisse être renseigné ici
-  # TODO : Vérifier que le prior est de dimension égale au nombre de paramètre du modèle
   name: "ConstrainedUniform2D"
   config:
     low: [0.0, 0.0]
-    high: [0.01, 0.01] # [2.0, 0.015, 0.01, 0.01]
+    high: [0.01, 0.01]
 
 # Ground truth for scoring and generation
 params:
-  # TODO : Vérifier que le nombre de paramètre est égal au nombre de paramètre du modèle
   lda: 0.009
   mu: 0.0033
 

@@ -16,6 +16,32 @@ class Config(object):
         with open(config_path, "r") as f:
             self.yaml: dict = safe_load(f)
 
+        self._validate_parameter_consistency()
+
+    def _validate_parameter_consistency(self) -> None:
+        """
+        Validate that generator, prior, and params have consistent parameter counts
+        """
+        generator_param_count = self.generator.param_count
+        prior_dimension = self.prior.dimension
+        actual_param_count = len([v for v in self.params.values() if v is not None])
+
+        # Check generator vs prior consistency
+        if generator_param_count != prior_dimension:
+            raise ValueError(
+                f"Parameter count mismatch: generator '{self.yaml['generator']['name']}' "
+                f"expects {generator_param_count} parameters, but prior "
+                f"'{self.yaml['prior']['name']}' has dimension {prior_dimension}"
+            )
+
+        # Check generator vs params consistency
+        if generator_param_count != actual_param_count:
+            raise ValueError(
+                f"Parameter count mismatch: generator '{self.yaml['generator']['name']}' "
+                f"expects {generator_param_count} parameters, "
+                f"but {actual_param_count} parameters provided in params."
+            )
+
     @property
     def stats(self) -> AbstractStatsClass:
         if not self.yaml.get("stats"):
