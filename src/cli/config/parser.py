@@ -22,25 +22,28 @@ class Config(object):
         """
         Validate that generator, prior, and params have consistent parameter counts
         """
-        generator_param_count = self.generator.param_count
-        prior_dimension = self.prior.dimension
         actual_param_count = len([v for v in self.params.values() if v is not None])
 
-        # Check generator vs prior consistency
-        if generator_param_count != prior_dimension:
-            raise ValueError(
-                f"Parameter count mismatch: generator '{self.yaml['generator']['name']}' "
-                f"expects {generator_param_count} parameters, but prior "
-                f"'{self.yaml['prior']['name']}' has dimension {prior_dimension}"
-            )
+        if "generator" in self.yaml:
+            generator_param_count = self.generator.param_count
 
-        # Check generator vs params consistency
-        if generator_param_count != actual_param_count:
-            raise ValueError(
-                f"Parameter count mismatch: generator '{self.yaml['generator']['name']}' "
-                f"expects {generator_param_count} parameters, "
-                f"but {actual_param_count} parameters provided in params."
-            )
+            # Check generator vs params consistency
+            if generator_param_count != actual_param_count:
+                raise ValueError(
+                    f"Parameter count mismatch: generator '{self.yaml['generator']['name']}' "
+                    f"expects {generator_param_count} parameters, "
+                    f"but {actual_param_count} parameters provided in params."
+                )
+
+        if "inference" in self.yaml:
+            prior_dimension = self.prior.dimension
+            # Check prior vs params consistency
+            if prior_dimension != actual_param_count:
+                raise ValueError(
+                    f"Parameter count mismatch: prior"
+                    f"expects {prior_dimension} parameters, "
+                    f"but {actual_param_count} parameters provided in params."
+                )
 
     @property
     def stats(self) -> AbstractStatsClass:
