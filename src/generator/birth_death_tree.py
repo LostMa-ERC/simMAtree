@@ -2,6 +2,8 @@ from typing import List, Union
 
 import networkx as nx
 import numpy as np
+import pickle
+import pandas as pd
 
 from .base_generator import BaseGenerator
 
@@ -29,13 +31,14 @@ class BirthDeathTree(BaseGenerator):
         max_pop : int
             Maximal population size (to avoid memory issue)
         """
+        self.param_count = 2
         self.n_init = n_init
         self.Nact = Nact
         self.Ninact = Ninact
         self.max_pop = max_pop
 
     def generate(
-        self, rng: np.random.Generator, params: Union[list, tuple, dict]
+        self, rng: np.random.Generator, params: Union[list, tuple, dict], verbose: bool = False
     ) -> nx.DiGraph:
         """
         Generate a complete tree according to the Birth-Death model
@@ -92,6 +95,26 @@ class BirthDeathTree(BaseGenerator):
                 lda, mu = params[1], params[3]  # Format [LDA, lda, gamma, mu]
             elif len(params) >= 2:
                 lda, mu = params[0], params[1]  # Format [lda, mu]
+            else:
+                raise ValueError("Not enough parameters provided")
+        else:
+            raise ValueError(f"Unsupported parameter type: {type(params)}")
+
+        return lda, mu
+
+    def _extract_params(self, params: Union[list, tuple, dict]) -> tuple:
+        """
+        Extract lambda and mu from parameters
+        """
+        if isinstance(params, dict):
+            lda = params.get("lda", 0)
+            mu = params.get("mu", 0)
+        elif isinstance(params, (list, tuple)):
+            # Assume order is [LDA, lda, gamma, mu] or [lda, mu]
+            if len(params) == 2:
+                lda, mu = params[1], params[3]  # Format [LDA, lda, gamma, mu]
+            elif len(params) > 2:
+                raise ValueError("Too many parameters provided")
             else:
                 raise ValueError("Not enough parameters provided")
         else:
@@ -353,3 +376,83 @@ class BirthDeathTree(BaseGenerator):
                 witness_counts.append(living_witnesses)
 
         return witness_counts
+
+    def load_data(self, csv_file: str, csv_sep: str = ";") -> list:
+        """
+        Load data from a csv file
+
+        Parameters
+        ----------
+        csv_file : str
+            Path to data
+
+        Returns
+        -------
+        Any
+            The loaded dataset
+        """
+        df = pd.read_csv(csv_file, sep=csv_sep, engine="python")
+        witness_counts = df.groupby("text_ID")["witness_ID"].count()
+        return list(witness_counts)
+    
+    def _to_DataFrame(self,pop):
+        """
+        Returns a pd.DataFrame representing a population of trees with following fields
+            * witness_ID (unique population-wide)
+            * text_ID
+            * birth time
+            * parent node of witness (if applicable else 'ROOT')
+        """
+        text_val = []
+        witness_val = []
+        birth_val = []
+        parent_val = []
+        for i,G in enumerate(pop):
+            for n in G.nodes():
+                text_val.append(f"T{i}")
+                witness_val.append(f"W{i}-{n+1}")
+                birth_val = G.nodes[n]['birth_time']
+                parents = list(G.predecessors(n))
+                par = f"W{i}-{parents[0]+1}" if parents != [] else "ROOT"
+                parent_val.append(par)
+        
+        df = pd.DataFrame({"witness_ID": witness_val, "text_ID": text_val, 
+            "birth_time" : birth_val,
+            "parent" : parent_val})
+        
+        return df
+    
+    def save_simul(self, pop: list, data_path: str, save_format: str = "csv") -> pd.DataFrame:
+        """
+        Save the simulation
+
+        Parameters
+        ----------
+        pop : list
+            Output of generate function
+        data_path : stripyth
+            path to save the file
+        save_format: 'csv' | 'serialized'
+            format of the saved file: 'csv' correspond to the data frame generated
+            by _to_DataFrame, 'serialized' produces a pickle dump of a list of nx.DiGraph
+            objects 
+
+        Returns
+        -------
+        pd.DataFrame
+            Dataframe that is saved in the CSV file.
+        """
+        if not pop or pop is None:
+            print("An empty population is given so nothing is saved.")
+            return
+
+        if save_format == 'csv':
+            df = self._to_DataFrame(pop)
+            df.to_csv(data_path, sep=";", index=False)
+        elif save_format == 'serialized':
+            with open(data_path, 'wb') as f:
+                pickle.dump(pop, f)
+        else:
+            raise ValueError(f"Unsupported save format: {save_format}")
+
+        return df

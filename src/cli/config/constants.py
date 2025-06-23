@@ -7,6 +7,7 @@ class ModelImports(Enum):
     # Generators
     YULEABUNDANCE = ("src.generator.yule_witness", "YuleWitness")
     BIRTHDEATHABUNDANCE = ("src.generator.birth_death_witness", "BirthDeathWitness")
+    BIRTHDEATHTREE = ("src.generator.birth_death_tree", "BirthDeathTree")
 
     # Backends
     SBI = ("src.inference.sbi_backend", "SbiBackend")
