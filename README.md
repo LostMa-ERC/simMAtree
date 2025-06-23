@@ -7,7 +7,8 @@
 [![License: CC BY-SA 4.0](https://img.shields.io/badge/License-CC_BY--SA_4.0-lightgrey.svg)](https://creativecommons.org/licenses/by-sa/4.0/)
 
 ## Description
-This repository performs an Approximate Bayesian Computation algorithm on witness distribution data modeled by a Yule process, using SBI library.
+This repository performs some Simulation Based Algorithm (SBI) on abundance distribution data. 
+One application done for the [LostMa](https://lostma-erc.github.io/) project consist in modelling the transmission and survival of textual witnesses through time, enabling researchers to infer model parameters from observed data.
 
 ## Contributing 🔧
 
@@ -56,209 +57,133 @@ Looks good!
 
 The script supports three tasks: `inference`, `generate` and `score`.
 
-No matter the task in your experiment, prepare a configuration YAML file. Follow the [model here](./example.config.yml).
+No matter the task in your experiment, prepare a configuration YAML file. Follow the [model here](./example.config_BD.yml).
 
 When running any of the `simmatree` tasks, you'll need to provide your experiment's configuration file.
 
-### `generate` data
+## Quick Start
 
-Generate synthetic witness data and write it to a CSV file.
+### 1. Create a Configuration File
 
-1. Set up the relevant parts of your experiment's configuration file.
+Create `experiment.yml`:
 
 ```yaml
-model:
-  name: Yule
+generator:
+  name: YuleAbundance  # or BirthDeathAbundance
   config:
     n_init: 1
     Nact: 1000
     Ninact: 1000
-    max_pop: 500000
+    max_pop: 50000
+
+stats:
+  name: Abundance
+  config:
+    additional_stats: true
+
+prior:
+  name: ConstrainedUniform4D  # or ConstrainedUniform2D for Birth-Death
+  config:
+    low: [0.0, 0.0, 0.0, 0.0]
+    high: [1.0, 0.015, 0.01, 0.01]
 
 params:
-  LDA: 0.3
-  lda: 0.012
-  gamma: 0.001
-  mu: 0.0033
-```
-
-2. Run the generate task.
-
-```shell
-simmatree -c <CONFIG FILE> generate -o <OUTPUT FILE>
-```
-
-### `infer` trees
-
-Run inference on witness data.
-
-1. Set up the relevant parts of your experiment's configuration file.
-
-```yaml
-model:
-  name: Yule
-  config:
-    n_init: 1
-    Nact: 1000
-    Ninact: 1000
-    max_pop: 500000
+  LDA: 0.3      # Rate of new independent trees (Yule only)
+  lda: 0.009    # Probability of copying/reproduction
+  gamma: 0.001  # Probability of speciation (Yule only)
+  mu: 0.0033    # Probability of death
 
 inference:
   name: SBI
   config:
-    method : NPE
-    num_simulations : 10
-    num_rounds : 1
-    random_seed : 42
-    num_samples : 10
-    num_workers : 10
-    device : cpu
+    method: NPE
+    num_simulations: 500
+    num_rounds: 2
+    random_seed: 42
+    num_samples: 500
+    num_workers: 10
+    device: cpu
 ```
 
-2. Run the inference task.
+This example performs all three simmatree tasks (`generate`, `score` and `infer`). 
+Certain blocks of information need not be provided if only one of the three tasks is to be performed (e.g. params if you only wish to perform inference and have no ground truth).
 
-```shell
-simmatree -c <CONFIG FILE> infer -i <DATA FILE> -o <OUTPUT DIRECTORY>
+### 2. Generate Synthetic Data
+
+```bash
+simmatree -c experiment.yml generate -o synthetic_data.csv -s 42
 ```
 
-### `score` inference
+### 3. Run Inference
 
-Evaluate inference results against known parameters.
-
-1. Set up the relevant parts of your configuration file.
-
-```yaml
-model:
-  name: Yule
-  config:
-    n_init: 1
-    Nact: 1000
-    Ninact: 1000
-    max_pop: 500000
-
-# Ground truth for scoring and generation
-params:
-  LDA: 0.3
-  lda: 0.012
-  gamma: 0.001
-  mu: 0.0033
+```bash
+simmatree -c experiment.yml infer -i synthetic_data.csv -o results/
 ```
 
-2. Run the score task.
+### 4. Evaluate Results
 
-```shell
-simmatree -c <CONFIG FILE> score -d <OUTPUT DIRECTORY>
+```bash
+simmatree -c experiment.yml score -d results/
+```
+## Architecture
+
+### Core Components
+
+- **Generators** (`src/generator/`): Implement stochastic evolutionary models
+  - `YuleWitness`: Full 4-parameter Yule process
+  - `BirthDeathWitness`: Simplified 2-parameter Birth-Death process
+  - `GeneralizedWitnessGenerator`: Base class with shared simulation logic
+
+- **Statistics** (`src/stats/`): Extract summary statistics from simulated data
+  - `AbundanceStats`: Witness count distributions and derived metrics
+
+- **Priors** (`src/priors/`): Constrained uniform distributions
+  - `ConstrainedUniform4D`: For Yule model with biological constraints
+  - `ConstrainedUniform2D`: For Birth-Death model
+
+- **Inference** (`src/inference/`): SBI backends
+  - `SbiBackend`: Neural Posterior Estimation and related methods
+
+- **CLI** (`src/cli/`): Command-line interface and configuration management## Outputs
+
+## Output Files
+
+### Inference Results
+- `posterior_samples.npy`: Raw posterior samples
+- `posterior_summary.csv`: Summary statistics (mean, quantiles, HPDI)
+- `posterior_predictive.npy`: Posterior predictive samples
+- `pp_summaries.png`: Posterior predictive check visualizations
+- `posterior.png`: Marginal posterior distributions
+- `pairplot.png`: Parameter correlation plots
+
+### Evaluation Results
+- `summary_metrics.csv`: RMSE, coverage probability, relative errors
+- `relative_error.png`: Parameter-wise relative error analysis
+- Additional diagnostic plots
+
+## Testing
+
+The project includes comprehensive tests:
+
+```bash
+# Run all tests
+python tests/run_all_tests.py
+
+# Run specific test categories
+python tests/run_all_tests.py --category unit
+python tests/run_all_tests.py --category integration
+python tests/run_all_tests.py --category e2e
 ```
 
-### Example Workflow
+## Contributing
 
-1. Set up a configuration file, i.e. `experiment_1.yml`.
+[![pre-commit](https://img.shields.io/badge/pre--commit-enabled-brightgreen?logo=pre-commit&logoColor=white)](https://github.com/pre-commit/pre-commit)
 
-```yaml
-model:
-  name: Yule
-  config:
-    n_init: 1
-    Nact: 1000
-    Ninact: 1000
-    max_pop: 500000
-
-params:
-  LDA: 0.3
-  lda: 0.012
-  gamma: 0.001
-  mu: 0.0033
-
-inference:
-  name: SBI
-  config:
-    method : NPE
-    num_simulations : 10
-    num_rounds : 1
-    random_seed : 42
-    num_samples : 10
-    num_workers : 10
-    device : cpu
-```
-
-2. Generate synthetic data with known parameters.
-
-```shell
-simmatree -c experiment_1.yml generate -o synthetic_data.csv
-```
-
-3. Run inference on the synthetic data.
-
-```shell
-simmatree -c experiment_1.yml infer -i synthetic_data.csv -o results/
-```
-
-4. Evaluate inference quality.
-
-```shell
-simmatree -c experiment_1.yml score -d results/
-```
-
-## Models
-
-### YuleModel
-A stochastic model based on the Yule process, with birth, death, and speciation events.
-
-Parameters:
-- `LDA`: Probability of new independent trees
-- `lda`: Probability of copying (reproduction)
-- `gamma`: Probability of speciation
-- `mu`: Probability of death
-
-### BirthDeath
-A simpler model with Poisson-distributed events.
-
-Parameters:
-- `LDA`: Rate of new independent populations
-- `lda`: Probability of copying
-- `mu`: Probability of death
-
-## Inference Backends
-
-### SBI Backend
-Uses simulation-based inference with neural networks through the SBI library.
-
-Configuration parameters:
-- `method`: Method to use (NPE, SNPE, etc.)
-- `num_simulations`: Number of simulations per round
-- `num_rounds`: Number of training rounds
-- `random_seed`: Random seed for reproducibility
-- `num_samples`: Number of posterior samples
-- `num_workers`: Number of parallel workers
-- `device`: Computation device (cpu/cuda)
-
-## Statistics Computation
-
-The project uses several summary statistics to analyze witness distributions:
-- Total number of witnesses
-- Number of unique works
-- Maximum number of witnesses per work
-- Median number of witnesses per work
-- Proportion of works with single witnesses
-- Additional quantile-based statistics
-
-## Outputs
-
-### For Inference Task
-The script generates:
-1. `pp_summaries.png`: Visualization of posterior predictive checks of different statistics
-2. `results_summary.csv`: Statistical summary of inference results
-4. `posterior.png`: Posterior distribution plots
-5. `posterior_pairs.png`: Pair plots showing parameter correlations
-6. Posterior samples saved as NumPy arrays
-
-### For Evaluation Task
-The script generates:
-1. `param_comparison.png`: Comparison of true vs. inferred parameters
-2. `bias.png`: Bias analysis for each parameter
-3. `relative_error.png`: Relative error analysis
-4. `summary_metrics.csv`: Summary of evaluation metrics
-
+See [CONTRIBUTING.md](./CONTRIBUTING.md) for detailed development instructions, including:
+- Setting up the development environment
+- Code formatting with `ruff` and `isort`
+- Pre-commit hooks
+- Testing guidelines
 
 ## Acknowledgements
 
