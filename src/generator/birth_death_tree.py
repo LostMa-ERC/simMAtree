@@ -74,12 +74,13 @@ class BirthDeathTree(BaseGenerator):
             # Handle BREAK case
             if complete_tree.graph.get("BREAK", False):
                 stemma = self._create_break_tree()
-
-            else:
+                stemmas.append(stemma)
+            elif self._witness_nb(complete_tree) >= 1:
                 stemma = self._generate_stemma(complete_tree)
-
-            stemmas.append(stemma)
-
+                stemmas.append(stemma)
+            else:
+                pass
+            
         return stemmas
 
     def _extract_params_old(self, params: Union[list, tuple, dict]) -> tuple:
@@ -258,6 +259,13 @@ class BirthDeathTree(BaseGenerator):
                 return n
         return None
 
+    def _witness_nb(self, tree):
+        """
+        Returns the number of living nodes from a complete tree
+        """
+
+        return list(nx.get_node_attributes(tree, 'state').values()).count(True)
+
     def _generate_stemma(self, complete_tree: nx.DiGraph) -> nx.DiGraph:
         """
         Generate stemma from a complete tree
@@ -411,7 +419,7 @@ class BirthDeathTree(BaseGenerator):
             for n in G.nodes():
                 text_val.append(f"T{i}")
                 witness_val.append(f"W{i}-{n+1}")
-                birth_val = G.nodes[n]['birth_time']
+                birth_val.append(G.nodes[n]['birth_time'])
                 parents = list(G.predecessors(n))
                 par = f"W{i}-{parents[0]+1}" if parents != [] else "ROOT"
                 parent_val.append(par)

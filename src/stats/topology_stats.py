@@ -2,6 +2,7 @@ from typing import List, Union
 
 import numpy as np
 from collections import Counter
+import networkx as nx
 
 from .base_stats import AbstractStatsClass
 
@@ -10,8 +11,9 @@ class TreeTopologyStats(AbstractStatsClass):
     """
     Summary statistics for tree topologies
     """
-
-    def compute_stats(self, stemmata: list) -> np.ndarray():
+    def __init__(self,additional_stats: bool = False):
+        pass
+    def compute_stats(self, stemmata: list) -> np.ndarray:
         """
         Compute stemmatic summary statistics on a population of trees
 
@@ -36,7 +38,7 @@ class TreeTopologyStats(AbstractStatsClass):
         for g in stemmata:
             node_nb_tot += len(g.nodes())
             degree_sequence_pop.extend([d for n,d in g.out_degree()])
-            degree_sequence_root.append([g.out_degree(self._root(g))])
+            degree_sequence_root.append(g.out_degree(self._root(g)))
             nb_leaves.append(len(self._leaves(g)))
             heights.append(self._height(g))
 
@@ -68,7 +70,7 @@ class TreeTopologyStats(AbstractStatsClass):
             "Proportion of nodes with root degree 3",
             "Proportion of nodes with root degree 4",
             "Average number of leaves",
-            "Height",
+            "Average Height",
         ]
 
         return names
@@ -108,7 +110,7 @@ class TreeTopologyStats(AbstractStatsClass):
                 return n
         return None
 
-    def _depth(self, graph: nx.Digraph, node) -> int:
+    def _depth(self, graph: nx.DiGraph, node) -> int:
         """
         Returns the depth (distance to root) of a node
 

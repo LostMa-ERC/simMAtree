@@ -14,7 +14,7 @@ class ModelImports(Enum):
 
     # Stats
     ABUNDANCE = ("src.stats.abundance_stats", "AbundanceStats")
-    TOPOLOGY = ("src.stats.tree_topology", "TreeTopologyStats")
+    TOPOLOGY = ("src.stats.topology_stats", "TreeTopologyStats")
 
     # Priors
     CONSTRAINEDUNIFORM2D = (
