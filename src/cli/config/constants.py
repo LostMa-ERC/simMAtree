@@ -5,8 +5,12 @@ from pydantic import BaseModel, Field
 
 class ModelImports(Enum):
     # Generators
-    YULEABUNDANCE = ("src.generator.yule_witness", "YuleWitness")
-    BIRTHDEATHABUNDANCE = ("src.generator.birth_death_witness", "BirthDeathWitness")
+    YULEABUNDANCE = ("src.generator.yule_abundance", "YuleAbundance")
+    BIRTHDEATHABUNDANCE = ("src.generator.birth_death_abundance", "BirthDeathAbundance")
+    BIRTHDEATHABUNDANCESINGLETREE = (
+        "src.generator.birth_death_abundance_single_tree",
+        "BirthDeathAbundanceSingleTree",
+    )
     BIRTHDEATHTREE = ("src.generator.birth_death_tree", "BirthDeathTree")
 
     # Backends
@@ -20,6 +24,10 @@ class ModelImports(Enum):
     CONSTRAINEDUNIFORM2D = (
         "src.priors.constrained_uniform_2D",
         "ConstrainedUniform2DPrior",
+    )
+    CONSTRAINEDUNIFORM3D = (
+        "src.priors.constrained_uniform_3D",
+        "ConstrainedUniform3DPrior",
     )
     CONSTRAINEDUNIFORM4D = (
         "src.priors.constrained_uniform_4D",

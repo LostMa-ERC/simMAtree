@@ -5,13 +5,13 @@ from pathlib import Path
 import numpy as np
 import pandas as pd
 
-from src.generator.birth_death_witness import BirthDeathWitness
-from src.generator.yule_witness import YuleWitness
+from generator.birth_death_abundance import BirthDeathAbundance
+from generator.yule_abundance import YuleAbundance
 
 
-class YuleWitnessTest(unittest.TestCase):
+class YuleAbundanceTest(unittest.TestCase):
     def setUp(self):
-        self.generator = YuleWitness(n_init=1, Nact=50, Ninact=50, max_pop=1000)
+        self.generator = YuleAbundance(n_init=1, Nact=50, Ninact=50, max_pop=1000)
         self.rng = np.random.default_rng(42)
 
         # Valid parameters for Yule model
@@ -106,7 +106,7 @@ class YuleWitnessTest(unittest.TestCase):
         high_growth_params = {"LDA": 0.1, "lda": 0.05, "gamma": 0.03, "mu": 0.001}
 
         # Use small population limit
-        small_generator = YuleWitness(n_init=1, Nact=20, Ninact=10, max_pop=50)
+        small_generator = YuleAbundance(n_init=1, Nact=20, Ninact=10, max_pop=50)
 
         result = small_generator.generate(self.rng, high_growth_params)
 
@@ -114,9 +114,9 @@ class YuleWitnessTest(unittest.TestCase):
         self.assertTrue(result == "BREAK" or isinstance(result, list))
 
 
-class BirthDeathWitnessTest(unittest.TestCase):
+class BirthDeathAbundanceTest(unittest.TestCase):
     def setUp(self):
-        self.generator = BirthDeathWitness(n_init=5, Nact=50, Ninact=50, max_pop=1000)
+        self.generator = BirthDeathAbundance(n_init=5, Nact=50, Ninact=50, max_pop=1000)
         self.rng = np.random.default_rng(42)
 
         # Valid parameters for Birth-Death model (only lda and mu)
@@ -175,8 +175,8 @@ class GeneratorComparisonTest(unittest.TestCase):
     """Test differences between Yule and Birth-Death generators"""
 
     def setUp(self):
-        self.yule_gen = YuleWitness(n_init=1, Nact=30, Ninact=30, max_pop=500)
-        self.bd_gen = BirthDeathWitness(n_init=5, Nact=30, Ninact=30, max_pop=500)
+        self.yule_gen = YuleAbundance(n_init=1, Nact=30, Ninact=30, max_pop=500)
+        self.bd_gen = BirthDeathAbundance(n_init=5, Nact=30, Ninact=30, max_pop=500)
         self.rng = np.random.default_rng(42)
 
     def test_parameter_counts(self):
@@ -232,7 +232,7 @@ class GeneratorEdgeCaseTest(unittest.TestCase):
         # Use parameters that favor extinction
         extinction_params = {"lda": 0.001, "mu": 0.01}
 
-        generator = BirthDeathWitness(n_init=1, Nact=10, Ninact=50, max_pop=100)
+        generator = BirthDeathAbundance(n_init=1, Nact=10, Ninact=50, max_pop=100)
         rng = np.random.default_rng(42)
 
         result = generator.generate(rng, extinction_params)
@@ -242,7 +242,7 @@ class GeneratorEdgeCaseTest(unittest.TestCase):
 
     def test_save_empty_population(self):
         """Test saving empty population"""
-        generator = YuleWitness(n_init=1, Nact=10, Ninact=10, max_pop=100)
+        generator = YuleAbundance(n_init=1, Nact=10, Ninact=10, max_pop=100)
 
         # Should handle empty list gracefully
         result = generator.save_simul([], "dummy_path.csv")
@@ -254,7 +254,7 @@ class GeneratorEdgeCaseTest(unittest.TestCase):
 
     def test_malformed_csv_loading(self):
         """Test loading from malformed CSV"""
-        generator = YuleWitness(n_init=1, Nact=10, Ninact=10, max_pop=100)
+        generator = YuleAbundance(n_init=1, Nact=10, Ninact=10, max_pop=100)
 
         # Create malformed CSV
         with tempfile.NamedTemporaryFile(mode="w", suffix=".csv", delete=False) as tmp:

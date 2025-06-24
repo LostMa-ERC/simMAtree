@@ -1,7 +1,7 @@
 import unittest
 
-from src.generator.birth_death_witness import BirthDeathWitness
-from src.generator.yule_witness import YuleWitness
+from generator.birth_death_abundance import BirthDeathAbundance
+from generator.yule_abundance import YuleAbundance
 from src.stats.abundance_stats import AbundanceStats
 
 BASIC_GENERATOR_CONFIG = {
@@ -26,17 +26,17 @@ FULL_BD_PARAMS = {
 
 class GeneratorInheritanceTest(unittest.TestCase):
     def test_yule_generator_creation(self):
-        generator = YuleWitness(**BASIC_GENERATOR_CONFIG)
-        self.assertIsInstance(generator, YuleWitness)
+        generator = YuleAbundance(**BASIC_GENERATOR_CONFIG)
+        self.assertIsInstance(generator, YuleAbundance)
         self.assertEqual(generator.param_count, 4)
 
     def test_birth_death_generator_creation(self):
-        generator = BirthDeathWitness(**BASIC_GENERATOR_CONFIG)
-        self.assertIsInstance(generator, BirthDeathWitness)
+        generator = BirthDeathAbundance(**BASIC_GENERATOR_CONFIG)
+        self.assertIsInstance(generator, BirthDeathAbundance)
         self.assertEqual(generator.param_count, 2)
 
     def test_yule_parameter_extraction(self):
-        generator = YuleWitness(**BASIC_GENERATOR_CONFIG)
+        generator = YuleAbundance(**BASIC_GENERATOR_CONFIG)
 
         # Test dict format
         params = generator._extract_params(FULL_YULE_PARAMS)
@@ -49,7 +49,7 @@ class GeneratorInheritanceTest(unittest.TestCase):
         self.assertEqual(params, expected)
 
     def test_birth_death_parameter_extraction(self):
-        generator = BirthDeathWitness(**BASIC_GENERATOR_CONFIG)
+        generator = BirthDeathAbundance(**BASIC_GENERATOR_CONFIG)
 
         # Test dict format
         params = generator._extract_params(FULL_BD_PARAMS)
@@ -62,8 +62,8 @@ class GeneratorInheritanceTest(unittest.TestCase):
         self.assertEqual(params, expected)
 
     def test_parameter_validation(self):
-        yule_gen = YuleWitness(**BASIC_GENERATOR_CONFIG)
-        bd_gen = BirthDeathWitness(**BASIC_GENERATOR_CONFIG)
+        yule_gen = YuleAbundance(**BASIC_GENERATOR_CONFIG)
+        bd_gen = BirthDeathAbundance(**BASIC_GENERATOR_CONFIG)
 
         # Valid parameters
         self.assertTrue(yule_gen.validate_params([0.1, 0.05, 0.02, 0.01]))

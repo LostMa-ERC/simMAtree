@@ -7,9 +7,9 @@ import pandas as pd
 from .base_generator import BaseGenerator
 
 
-class GeneralizedWitnessGenerator(BaseGenerator):
+class GeneralizedAbundanceGenerator(BaseGenerator):
     """
-    Generalized witness generator implementing the full 4-parameter model
+    Generalized abundance generator implementing the full 4-parameter model
 
     Implements the complete simulation logic for models with parameters:
     - LDA: Rate of new independent trees
@@ -22,7 +22,7 @@ class GeneralizedWitnessGenerator(BaseGenerator):
 
     def __init__(self, n_init: int, Nact: int, Ninact: int, max_pop: int):
         """
-        Initialize the generalized witness generator
+        Initialize the generalized abundance generator
 
         Parameters
         ----------
@@ -136,7 +136,6 @@ class GeneralizedWitnessGenerator(BaseGenerator):
 
         # Active phase
         while t < self.Nact and total_pop <= self.max_pop:
-            # New independent trees (LDA > 0 for Yule models)
             if total_pop < self.max_pop and LDA > 0:
                 n_new_trees = rng.poisson(lam=LDA)
                 if n_new_trees:

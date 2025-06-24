@@ -1,11 +1,11 @@
 import torch
 
-from .generalized_witness import GeneralizedWitnessGenerator
+from .generalized_abundance import GeneralizedAbundanceGenerator
 
 
-class YuleWitness(GeneralizedWitnessGenerator):
+class YuleAbundance(GeneralizedAbundanceGenerator):
     """
-    Optimized generator for witness counts according to Birth-Death model
+    Optimized generator for abundance counts according to Birth-Death model
 
     - lda: Probability of copying/reproduction
     - mu: Probability of death

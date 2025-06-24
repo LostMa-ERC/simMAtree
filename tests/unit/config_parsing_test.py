@@ -5,9 +5,9 @@ from pathlib import Path
 import pytest
 import yaml
 
+from generator.birth_death_abundance import BirthDeathAbundance
+from generator.yule_abundance import YuleAbundance
 from src.cli.config import Config
-from src.generator.birth_death_witness import BirthDeathWitness
-from src.generator.yule_witness import YuleWitness
 from src.inference.sbi_backend import SbiBackend
 from src.priors.constrained_uniform_2D import ConstrainedUniform2DPrior
 from src.priors.constrained_uniform_4D import ConstrainedUniform4DPrior
@@ -82,7 +82,7 @@ class YamlParsingTest(unittest.TestCase):
         config_path = self._create_temp_config(self.yule_config)
         try:
             conf = Config(config_path)
-            self.assertIsInstance(conf.generator, YuleWitness)
+            self.assertIsInstance(conf.generator, YuleAbundance)
             self.assertIsInstance(conf.backend, SbiBackend)
             self.assertIsInstance(conf.stats, AbundanceStats)
             self.assertIsInstance(conf.prior, ConstrainedUniform4DPrior)
@@ -94,7 +94,7 @@ class YamlParsingTest(unittest.TestCase):
         config_path = self._create_temp_config(self.bd_config)
         try:
             conf = Config(config_path)
-            self.assertIsInstance(conf.generator, BirthDeathWitness)
+            self.assertIsInstance(conf.generator, BirthDeathAbundance)
             self.assertIsInstance(conf.backend, SbiBackend)
             self.assertIsInstance(conf.stats, AbundanceStats)
             self.assertIsInstance(conf.prior, ConstrainedUniform2DPrior)
@@ -120,11 +120,11 @@ class YamlParsingTest(unittest.TestCase):
 class ConfigImportsTest(unittest.TestCase):
     def test_yule_generator_import(self):
         model = Config.import_class(name="YuleAbundance")
-        self.assertEqual(model, YuleWitness)
+        self.assertEqual(model, YuleAbundance)
 
     def test_birth_death_generator_import(self):
         model = Config.import_class(name="BirthDeathAbundance")
-        self.assertEqual(model, BirthDeathWitness)
+        self.assertEqual(model, BirthDeathAbundance)
 
     def test_sbi_backend_import(self):
         backend = Config.import_class(name="SBI")

@@ -1,16 +1,14 @@
 import torch
 
-from .generalized_witness import GeneralizedWitnessGenerator
+from .generalized_abundance import GeneralizedAbundanceGenerator
 
 
-class BirthDeathWitness(GeneralizedWitnessGenerator):
+class BirthDeathAbundanceSingleTree(GeneralizedAbundanceGenerator):
     """
-    Optimized generator for witness counts according to Birth-Death model
+    Optimized generator for abundance counts according to Birth-Death model
 
     - lda: Probability of copying/reproduction
     - mu: Probability of death
-    - LDA: Fixed at 0 (no new independent trees)
-    - gamma: Fixed at 0 (no speciation)
 
     Constraints: lda > mu
     """

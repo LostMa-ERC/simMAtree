@@ -5,7 +5,7 @@ from pathlib import Path
 import numpy as np
 import torch
 
-from src.generator.birth_death_witness import BirthDeathWitness
+from generator.birth_death_abundance import BirthDeathAbundance
 from src.inference.sbi_backend import SbiBackend
 from src.priors.constrained_uniform_2D import ConstrainedUniform2DPrior
 from src.stats.abundance_stats import AbundanceStats
@@ -25,7 +25,7 @@ class SbiBackendTest(unittest.TestCase):
         )
 
         # Create simple generator and stats for testing
-        self.generator = BirthDeathWitness(n_init=1, Nact=10, Ninact=10, max_pop=100)
+        self.generator = BirthDeathAbundance(n_init=1, Nact=10, Ninact=10, max_pop=100)
 
         self.stats = AbundanceStats(additional_stats=False)
 
@@ -334,10 +334,10 @@ class SbiBackendIntegrationTest(unittest.TestCase):
 
     def test_yule_generator_integration(self):
         """Test SBI with Yule generator"""
-        from src.generator.yule_witness import YuleWitness
+        from generator.yule_abundance import YuleAbundance
         from src.priors.constrained_uniform_4D import ConstrainedUniform4DPrior
 
-        generator = YuleWitness(n_init=1, Nact=5, Ninact=5, max_pop=50)
+        generator = YuleAbundance(n_init=1, Nact=5, Ninact=5, max_pop=50)
         stats = AbundanceStats(additional_stats=False)
         prior = ConstrainedUniform4DPrior(
             low=torch.tensor([0.0, 0.001, 0.0, 0.0]),
@@ -360,10 +360,10 @@ class SbiBackendIntegrationTest(unittest.TestCase):
 
     def test_additional_stats_integration(self):
         """Test SBI with additional statistics"""
-        from src.generator.birth_death_witness import BirthDeathWitness
+        from generator.birth_death_abundance import BirthDeathAbundance
         from src.priors.constrained_uniform_2D import ConstrainedUniform2DPrior
 
-        generator = BirthDeathWitness(n_init=1, Nact=5, Ninact=5, max_pop=50)
+        generator = BirthDeathAbundance(n_init=1, Nact=5, Ninact=5, max_pop=50)
         stats = AbundanceStats(additional_stats=True)  # More statistics
         prior = ConstrainedUniform2DPrior(
             low=torch.tensor([0.001, 0.0]),

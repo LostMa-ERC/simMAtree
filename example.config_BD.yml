@@ -4,7 +4,7 @@
 generator:
   name: BirthDeathAbundance # "YuleAbundance" or "BirthDeathAbundance"
   config:
-    n_init: 200
+    n_init: 1
     Nact: 1000
     Ninact: 1000
     max_pop: 100000
@@ -18,13 +18,14 @@ stats:
 # Prior distribution for the parameters
 prior:
   # TODO : Pouvoir faire en sorte que n'importe quel distribution déjà existante dans Pytorch puisse être renseigné ici
-  name: "ConstrainedUniform2D"
+  name: "ConstrainedUniform3D"
   config:
-    low: [0.0, 0.0]
-    high: [0.01, 0.01]
+    low: [0.0, 0.0, 0.0]
+    high: [1, 0.01, 0.01]
 
 # Ground truth for scoring and generation
 params:
+  LDA: 0.5
   lda: 0.009
   mu: 0.0033
 
@@ -33,7 +34,7 @@ inference:
   name: SBI # "SBI"
   config:
     method : NPE
-    num_simulations : 1000
+    num_simulations : 500
     num_rounds : 2
     random_seed : 42
     num_samples : 500

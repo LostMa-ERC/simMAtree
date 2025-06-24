@@ -130,9 +130,9 @@ simmatree -c experiment.yml score -d results/
 ### Core Components
 
 - **Generators** (`src/generator/`): Implement stochastic evolutionary models
-  - `YuleWitness`: Full 4-parameter Yule process
-  - `BirthDeathWitness`: Simplified 2-parameter Birth-Death process
-  - `GeneralizedWitnessGenerator`: Base class with shared simulation logic
+  - `YuleAbundance`: Full 4-parameter Yule process
+  - `BirthDeathAbundance`: Simplified 2-parameter Birth-Death process
+  - `GeneralizedAbundanceGenerator`: Base class with shared simulation logic
 
 - **Statistics** (`src/stats/`): Extract summary statistics from simulated data
   - `AbundanceStats`: Witness count distributions and derived metrics
