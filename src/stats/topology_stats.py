@@ -129,7 +129,7 @@ class TreeTopologyStats(AbstractStatsClass):
 
     def _height(self, graph: nx.DiGraph) -> int:
         """
-        Return the largest depth of a node with a tree
+        Return the largest depth of a node within a tree
 
         Parameters
         ----------
