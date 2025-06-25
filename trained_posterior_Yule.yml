@@ -23,20 +23,8 @@ prior:
     low: [0.0, 0.0, 0.0]
     high: [1, 0.01, 0.01]
 
-# Ground truth for scoring and generation
-params:
-  LDA: 0.5
-  lda: 0.009
-  mu: 0.0033
-
 # Set up for the inference backend
 inference:
   name: SBI # "SBI"
   config:
-    method : NPE
-    num_simulations : 500
-    num_rounds : 1
-    random_seed : 42
-    num_samples : 500
-    num_workers : 10
-    device : cpu  
+    posterior_path: "posteriors/posterior.pkl"

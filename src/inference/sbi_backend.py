@@ -1,3 +1,4 @@
+import pickle
 from pathlib import Path
 
 import numpy as np
@@ -27,13 +28,14 @@ from src.utils.visualisation import (
 class SbiBackend(AbstractInferenceClass):
     def __init__(
         self,
-        method: str,
-        num_simulations: int,
-        num_rounds: int,
-        random_seed: int,
-        num_samples: int,
-        num_workers: int,
-        device: str,
+        device: str = "cpu",
+        method: str = None,
+        num_simulations: int = 10,
+        num_rounds: int = 1,
+        random_seed: int = 42,
+        num_samples: int = 10,
+        num_workers: int = 1,
+        posterior_path: str = None,
     ):
         super().__init__(random_seed=random_seed)
         self.method = method
@@ -44,6 +46,8 @@ class SbiBackend(AbstractInferenceClass):
         self.num_workers = num_workers
         self.device = device
         self.results = None
+        self.posterior_path = posterior_path
+        self.trained_posterior = None
 
     def run_inference(
         self,
@@ -52,10 +56,6 @@ class SbiBackend(AbstractInferenceClass):
         data: np.ndarray,
         prior: Distribution,
     ):
-        print(f"Training device: {self.device}")
-        simulation_device = torch.device("cpu")
-        print(f"Simulation device: {simulation_device}")
-
         # Convert data to torch tensor
         x_o = torch.tensor(data, dtype=torch.float32).to(self.device)
 
@@ -67,7 +67,7 @@ class SbiBackend(AbstractInferenceClass):
             try:
                 if not generator.validate_params(params):
                     raise ValueError(f"Unvalidated parameters: {params}")
-                pop = result = generator.generate(self.rng, params)
+                pop = generator.generate(self.rng, params)
                 result = stats.compute_stats(pop)
                 return torch.tensor(result, dtype=torch.float32)
             except ValueError:
@@ -79,53 +79,70 @@ class SbiBackend(AbstractInferenceClass):
         # Check SBI inputs
         check_sbi_inputs(simulator, prior)
 
-        # Choose inference method
-        Model_class = getattr(sbi.inference, self.method.upper())
-        try:
-            inference = Model_class(prior=prior, device=self.device)
-        except Exception as e:
-            raise e("Unknown SBI method")
+        if self.posterior_path:
+            print(f"Loading pre-trained model from {self.posterior_path}")
 
-        # Perform inference with multiple rounds
-        num_simulations = self.num_simulations
-        num_rounds = self.num_rounds
+            with open(self.posterior_path, "rb") as f:
+                posterior = pickle.load(f)
 
-        posteriors = []
-        proposal = prior
-        # TODO : This part must be change if self.device == "cuda" (alternate between cpu and gpu for simulation and learning)
+        else:
+            print(f"Training device: {self.device}")
+            if self.method is None:
+                raise ValueError(
+                    "SBI Method is required in the config for training (example: NPE)"
+                )
 
-        print("Running simulations...")
+            # Choose inference method
+            Model_class = getattr(sbi.inference, self.method.upper())
+            try:
+                inference = Model_class(prior=prior, device=self.device)
+            except Exception as e:
+                raise e("Unknown SBI method")
 
-        for i in range(num_rounds):
-            print(f"ROUND {i + 1}")
+            # Perform inference with multiple rounds
+            num_simulations = self.num_simulations
+            num_rounds = self.num_rounds
 
-            params, x = simulate_for_sbi(
-                simulator, proposal, num_simulations, num_workers=self.num_workers
-            )
-            zero_counter = torch.sum(torch.all(x == 0, dim=1)).item()
-            break_counter = torch.sum(torch.all(x == 1, dim=1)).item()
-            print(
-                f"\n{zero_counter} zero occurrences out of {num_simulations} simulations ({zero_counter / num_simulations * 100:.2f}%)"
-            )
-            print(
-                f"{break_counter} BREAK occurrences out of {num_simulations} simulations ({break_counter / num_simulations * 100:.2f}%)\n"
-            )
+            posteriors = []
+            proposal = prior
+            # TODO : This part must be change if self.device == "cuda" (alternate between cpu and gpu for simulation and learning)
 
-            if num_rounds == 1:
-                density_estimator = inference.append_simulations(params, x).train()
-            else:
-                density_estimator = inference.append_simulations(
-                    params, x, proposal
-                ).train(force_first_round_loss=True)
-            posterior = inference.build_posterior(
-                density_estimator, sample_with="mcmc"
-            ).set_default_x(x_o)
-            posteriors.append(posterior)
+            print("Running simulations...")
 
-            accept_reject_fn = get_density_thresholder(
-                posterior, quantile=1e-4, num_samples_to_estimate_support=100000
-            )
-            proposal = RestrictedPrior(prior, accept_reject_fn, sample_with="rejection")
+            for i in range(num_rounds):
+                print(f"ROUND {i + 1}")
+
+                params, x = simulate_for_sbi(
+                    simulator, proposal, num_simulations, num_workers=self.num_workers
+                )
+                zero_counter = torch.sum(torch.all(x == 0, dim=1)).item()
+                break_counter = torch.sum(torch.all(x == 1, dim=1)).item()
+                print(
+                    f"\n{zero_counter} zero occurrences out of {num_simulations} simulations ({zero_counter / num_simulations * 100:.2f}%)"
+                )
+                print(
+                    f"{break_counter} BREAK occurrences out of {num_simulations} simulations ({break_counter / num_simulations * 100:.2f}%)\n"
+                )
+
+                if num_rounds == 1:
+                    density_estimator = inference.append_simulations(params, x).train()
+                else:
+                    density_estimator = inference.append_simulations(
+                        params, x, proposal
+                    ).train(force_first_round_loss=True)
+                posterior = inference.build_posterior(
+                    density_estimator, sample_with="mcmc"
+                ).set_default_x(x_o)
+                posteriors.append(posterior)
+
+                accept_reject_fn = get_density_thresholder(
+                    posterior, quantile=1e-4, num_samples_to_estimate_support=100000
+                )
+                proposal = RestrictedPrior(
+                    prior, accept_reject_fn, sample_with="rejection"
+                )
+
+            self.trained_posterior = posterior
 
         # Get samples from the posterior
         num_samples = 1000
@@ -193,3 +210,20 @@ class SbiBackend(AbstractInferenceClass):
         )
         plot_combined_hpdi([data["posterior_samples"]], output_dir=output_dir)
         plot_marginal_posterior(data["posterior_samples"], output_dir=output_dir)
+
+    def save_model(self, output_dir: Path):
+        """
+        Save the trained SBI posterior
+        """
+        if self.trained_posterior is None:
+            print("No trained model to save. Run inference first.")
+            return
+
+        try:
+            posterior_path = output_dir / "posterior.pkl"
+            with open(posterior_path, "wb") as f:
+                pickle.dump(self.trained_posterior, f)
+            print(f"Posterior saved to {posterior_path}")
+
+        except Exception as e:
+            print(f"Error saving model: {e}")

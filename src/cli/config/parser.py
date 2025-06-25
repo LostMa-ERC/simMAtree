@@ -24,6 +24,9 @@ class Config(object):
         """
         actual_param_count = len([v for v in self.params.values() if v is not None])
 
+        if self.yaml.get("inference", {}).get("config", {}).get("posterior_path"):
+            return
+
         if "generator" in self.yaml:
             generator_param_count = self.generator.param_count
 

@@ -1,18 +1,20 @@
-from typing import List, Union
-
-import numpy as np
 from collections import Counter
+from typing import List
+
 import networkx as nx
+import numpy as np
 
 from .base_stats import AbstractStatsClass
 
-    
+
 class TreeTopologyStats(AbstractStatsClass):
     """
     Summary statistics for tree topologies
     """
-    def __init__(self,additional_stats: bool = False):
+
+    def __init__(self, additional_stats: bool = False):
         pass
+
     def compute_stats(self, stemmata: list) -> np.ndarray:
         """
         Compute stemmatic summary statistics on a population of trees
@@ -28,16 +30,16 @@ class TreeTopologyStats(AbstractStatsClass):
         np.ndarray
             Array of computed statistics
         """
-        nb_stats = self.get_num_stats()
-        node_nb_tot = 0 # total number of nodes in the population
+        _ = self.get_num_stats()
+        node_nb_tot = 0  # total number of nodes in the population
         nb_trees = len(stemmata)
-        degree_sequence_pop = [] # degree sequence of the nodes in the population
-        degree_sequence_root = [] # list of root degrees over population
+        degree_sequence_pop = []  # degree sequence of the nodes in the population
+        degree_sequence_root = []  # list of root degrees over population
         nb_leaves = []
         heights = []
         for g in stemmata:
             node_nb_tot += len(g.nodes())
-            degree_sequence_pop.extend([d for n,d in g.out_degree()])
+            degree_sequence_pop.extend([d for n, d in g.out_degree()])
             degree_sequence_root.append(g.out_degree(self._root(g)))
             nb_leaves.append(len(self._leaves(g)))
             heights.append(self._height(g))
@@ -59,22 +61,22 @@ class TreeTopologyStats(AbstractStatsClass):
         return np.array(stats, dtype=np.float64)
 
     def get_stats_names(self) -> List[str]:
-        """_
+        """
         Get names of computed statistics
         """
         names = [
             "Proportion of nodes with degree 2",
             "Proportion of nodes with degree 3",
             "Proportion of nodes with degree 4",
-            "Proportion of nodes with root degree 2",
-            "Proportion of nodes with root degree 3",
-            "Proportion of nodes with root degree 4",
+            "Proportion of trees with root degree 2",
+            "Proportion of trees with root degree 3",
+            "Proportion of trees with root degree 4",
             "Average number of leaves",
             "Average Height",
         ]
 
         return names
-    
+
     def _leaves(self, graph: nx.DiGraph) -> List:
         """
         Return the terminal leaves of a tree

@@ -16,6 +16,7 @@ def inference(
     backend: AbstractInferenceClass,
     dir: Path,
     csv_separator: str = ";",
+    save_model: bool = False,
 ):
     console = Console()
 
@@ -46,5 +47,10 @@ def inference(
     backend.plot_results(
         data=inference_data, observed_values=observed_values, output_dir=dir
     )
+
+    # Save the model if option is true
+    if save_model:
+        console.rule("Saving trained model")
+        backend.save_model(output_dir=dir)
 
     return inference_data

@@ -64,12 +64,11 @@ class GeneralizedAbundanceGenerator(BaseGenerator):
         if pop == []:
             if verbose:
                 print("No survivors in the simulation!")
-            return False
+
         if pop == "BREAK":
             if verbose:
                 print("The estimation hit the maximum size during simulation...")
                 print("Estimation not saved.")
-            return False
 
         return pop
 
@@ -235,7 +234,7 @@ class GeneralizedAbundanceGenerator(BaseGenerator):
         text_val = []
         witness_val = []
 
-        if not pop or pop is None:
+        if not pop or pop is None or pop == "BREAK":
             print("An empty population is given so nothing is saved.")
             return
 

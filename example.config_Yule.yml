@@ -7,7 +7,7 @@ generator:
     n_init: 1
     Nact: 1000
     Ninact: 1000
-    max_pop: 50000
+    max_pop: 500000
 
 # Summary statistics that will be given as input to the inference
 stats: 
@@ -21,7 +21,7 @@ prior:
   name: "ConstrainedUniform4D"
   config:
     low: [0.0, 0.0, 0.0, 0.0]
-    high: [1.0, 0.015, 0.01, 0.01]
+    high: [1.0, 0.03, 0.02, 0.02]
 
 # Ground truth for scoring and generation
 params:
@@ -35,8 +35,8 @@ inference:
   name: SBI # "SBI"
   config:
     method : NPE
-    num_simulations : 500
-    num_rounds : 2
+    num_simulations : 1000
+    num_rounds : 1
     random_seed : 42
     num_samples : 500
     num_workers : 10

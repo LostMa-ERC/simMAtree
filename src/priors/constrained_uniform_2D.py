@@ -1,5 +1,6 @@
 import torch
 
+from ..utils.stats import expected_yule_tree_size
 from .constrained_uniform import ConstrainedUniform
 
 
@@ -35,11 +36,27 @@ class ConstrainedUniform2DPrior(ConstrainedUniform):
 
         # Constraint 2: E[population of a tree] < max_pop/n_init
         constraint2 = (
-            torch.exp(
-                (x[..., 0] - x[..., 1]) * self.hyperparams["Nact"]
-                - x[..., 1] * self.hyperparams["Ninact"]
+            expected_yule_tree_size(
+                1 / self.hyperparams["Nact"],
+                x[..., 0],
+                x[..., 1],
+                0,
+                self.hyperparams["Nact"],
             )
             <= self.hyperparams["max_pop"] / self.hyperparams["n_init"]
         )
 
-        return constraint1 & constraint2
+        # Constraint 3: E[population of a tree at Ninact] > 1
+        constraint3 = (
+            expected_yule_tree_size(
+                1 / self.hyperparams["Nact"],
+                x[..., 0],
+                x[..., 1],
+                0,
+                self.hyperparams["Nact"],
+                self.hyperparams["Ninact"],
+            )
+            >= 1
+        )
+
+        return constraint1 & constraint2 & constraint3

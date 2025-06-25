@@ -1,5 +1,6 @@
 import torch
 
+from ..utils.stats import expected_yule_tree_size
 from .constrained_uniform import ConstrainedUniform
 
 
@@ -32,19 +33,31 @@ class ConstrainedUniform4DPrior(ConstrainedUniform):
         super().__init__(low, high, hyperparams, device)
 
     def _check_constraints(self, x):
-        # Contrainte 1: lda + gamma > mu (indices 1, 2, 3)
+        # Constraint 1: lda + gamma > mu (indices 1, 2, 3)
         constraint1 = x[..., 1] + x[..., 2] > x[..., 3]
 
-        # Contrainte 2: gamma < lda (indices 1, 2)
+        # Constraint 2: gamma < lda (indices 1, 2)
         constraint2 = x[..., 2] < x[..., 1]
 
-        # Contrainte 3: E[population d'un arbre] < max_pop
+        # Constraint 3: E[population of a tree at Nact] < max_pop
         constraint3 = (
-            torch.exp(
-                (x[..., 1] + x[..., 2] - x[..., 3]) * self.hyperparams["Nact"]
-                - x[..., 3] * self.hyperparams["Ninact"]
+            expected_yule_tree_size(
+                x[..., 0], x[..., 1], x[..., 2], x[..., 3], self.hyperparams["Nact"]
             )
             <= self.hyperparams["max_pop"] / self.hyperparams["n_init"]
         )
 
-        return constraint1 & constraint2 & constraint3
+        # Constraint 4: E[population of a tree at Ninact] > 1
+        constraint4 = (
+            expected_yule_tree_size(
+                x[..., 0],
+                x[..., 1],
+                x[..., 2],
+                x[..., 3],
+                self.hyperparams["Nact"],
+                self.hyperparams["Ninact"],
+            )
+            >= 1
+        )
+
+        return constraint1 & constraint2 & constraint3 & constraint4

@@ -42,3 +42,14 @@ class AbstractInferenceClass(ABC):
         Visualize the results of the inference
         """
         pass
+
+    def save_model(self, output_dir: Path):
+        """
+        Save the trained model to the specified directory
+
+        Parameters
+        ----------
+        output_dir : Path
+            Directory where to save the model
+        """
+        pass

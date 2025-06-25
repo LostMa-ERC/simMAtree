@@ -38,8 +38,9 @@ def test_installation():
     type=click.Path(file_okay=False, dir_okay=True),
 )
 @click.option("-s", "--separator", required=False, default=";", type=click.STRING)
+@click.option("--save", is_flag=True, help="Save the trained model")
 @click.pass_obj
-def infer_command(config: Config, infile: str, outdir: str, separator: str):
+def infer_command(config: Config, infile: str, outdir: str, separator: str, save: str):
     generator = config.generator
     stats = config.stats
     prior = config.prior
@@ -54,6 +55,7 @@ def infer_command(config: Config, infile: str, outdir: str, separator: str):
         backend=backend,
         dir=dir,
         csv_separator=separator,
+        save_model=save,
     )
 
 

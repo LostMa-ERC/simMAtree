@@ -70,7 +70,7 @@ class ConstrainedUniform(BasePrior):
         valid = self._check_constraints(samples)
 
         # Continuer à échantillonner jusqu'à ce que tous les échantillons soient valides
-        max_attempts = 200
+        max_attempts = 500
         attempt = 0
 
         while not torch.all(valid) and attempt < max_attempts:
