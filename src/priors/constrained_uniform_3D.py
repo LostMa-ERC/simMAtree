@@ -39,7 +39,7 @@ class ConstrainedUniform3DPrior(ConstrainedUniform):
         # Contrainte 2: E[population d'un arbre] < max_pop
         constraint2 = (
             expected_yule_tree_size(
-                x[..., 0], x[..., 1], x[..., 2], 0, self.hyperparams["Nact"]
+                x[..., 0], x[..., 1], 0, x[..., 2], self.hyperparams["Nact"]
             )
             <= self.hyperparams["max_pop"] / self.hyperparams["n_init"]
         )
@@ -47,12 +47,12 @@ class ConstrainedUniform3DPrior(ConstrainedUniform):
         # Constraint 3: E[population of a tree at Ninact] > 1
         constraint3 = (
             expected_yule_tree_size(
-                x[..., 0],
-                x[..., 1],
-                x[..., 2],
-                0,
-                self.hyperparams["Nact"],
-                self.hyperparams["Ninact"],
+                LDA=x[..., 0],
+                lda=x[..., 1],
+                gamma=0,
+                mu=x[..., 2],
+                Nact=self.hyperparams["Nact"],
+                Ninact=self.hyperparams["Ninact"],
             )
             >= 1
         )

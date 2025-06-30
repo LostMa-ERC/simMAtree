@@ -28,3 +28,9 @@ inference:
   name: SBI # "SBI"
   config:
     posterior_path: "posteriors/posterior.pkl"
+
+params:
+  LDA: 0.3
+  lda: 0.009
+  gamma: 0.001
+  mu: 0.0033

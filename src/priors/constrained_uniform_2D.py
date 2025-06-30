@@ -37,10 +37,10 @@ class ConstrainedUniform2DPrior(ConstrainedUniform):
         # Constraint 2: E[population of a tree] < max_pop/n_init
         constraint2 = (
             expected_yule_tree_size(
-                1 / self.hyperparams["Nact"],
-                x[..., 0],
-                x[..., 1],
                 0,
+                x[..., 0],
+                0,
+                x[..., 1],
                 self.hyperparams["Nact"],
             )
             <= self.hyperparams["max_pop"] / self.hyperparams["n_init"]
@@ -49,12 +49,12 @@ class ConstrainedUniform2DPrior(ConstrainedUniform):
         # Constraint 3: E[population of a tree at Ninact] > 1
         constraint3 = (
             expected_yule_tree_size(
-                1 / self.hyperparams["Nact"],
-                x[..., 0],
-                x[..., 1],
-                0,
-                self.hyperparams["Nact"],
-                self.hyperparams["Ninact"],
+                LDA=0,
+                lda=x[..., 0],
+                gamma=0,
+                mu=x[..., 1],
+                Nact=self.hyperparams["Nact"],
+                Ninact=self.hyperparams["Ninact"],
             )
             >= 1
         )
