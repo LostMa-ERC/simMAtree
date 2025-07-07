@@ -42,9 +42,14 @@ class ConstrainedUniform4DPrior(ConstrainedUniform):
         # Constraint 3: E[population of a tree at Nact] < max_pop
         constraint3 = (
             expected_yule_tree_size(
-                x[..., 0], x[..., 1], x[..., 2], x[..., 3], self.hyperparams["Nact"]
+                x[..., 0],
+                x[..., 1],
+                x[..., 2],
+                x[..., 3],
+                self.hyperparams["n_init"],
+                self.hyperparams["Nact"],
             )
-            <= self.hyperparams["max_pop"] / self.hyperparams["n_init"]
+            <= self.hyperparams["max_pop"]
         )
 
         # Constraint 4: E[population of a tree at Ninact] > 1
@@ -54,6 +59,7 @@ class ConstrainedUniform4DPrior(ConstrainedUniform):
                 x[..., 1],
                 x[..., 2],
                 x[..., 3],
+                self.hyperparams["n_init"],
                 self.hyperparams["Nact"],
                 self.hyperparams["Ninact"],
             )
