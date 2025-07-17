@@ -31,7 +31,7 @@ class Config(object):
             generator_param_count = self.generator.param_count
 
             # Check generator vs params consistency
-            if generator_param_count != actual_param_count:
+            if actual_param_count != 0 and generator_param_count != actual_param_count:
                 raise ValueError(
                     f"Parameter count mismatch: generator '{self.yaml['generator']['name']}' "
                     f"expects {generator_param_count} parameters, "
@@ -41,7 +41,7 @@ class Config(object):
         if "inference" in self.yaml:
             prior_dimension = self.prior.dimension
             # Check prior vs params consistency
-            if prior_dimension != actual_param_count:
+            if actual_param_count != 0 and prior_dimension != actual_param_count:
                 raise ValueError(
                     f"Parameter count mismatch: prior"
                     f"expects {prior_dimension} parameters, "

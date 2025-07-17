@@ -9,6 +9,8 @@ from sbi.analysis import pairplot
 from scipy.stats import gaussian_kde
 from sklearn.neighbors import KernelDensity
 
+BW = 1.8
+
 
 def plot_sbi_pairplot(samples, output_dir, hpdi_point=None):
     param_samples = torch.tensor(samples)
@@ -85,6 +87,9 @@ def plot_combined_hpdi(
     # Déterminer les dimensions
     n_dims = samples_list[0].shape[1]
 
+    if n_dims == 3:
+        param_names = [r"$\Lambda$", r"$\lambda$", r"$\mu$"]
+
     fig = plt.figure(figsize=(3 * n_dims, 3 * n_dims), dpi=100)
     gs = fig.add_gridspec(n_dims, n_dims, wspace=0.3, hspace=0.3)
 
@@ -128,6 +133,7 @@ def plot_combined_hpdi(
                         fill=True,
                         alpha=0.3,
                         linewidth=2,
+                        bw_adjust=BW,
                         label=label_name,
                     )
 
@@ -195,6 +201,7 @@ def plot_combined_hpdi(
                             color=color,
                             alpha=0.6,
                             fill=True,
+                            bw_adjust=BW,
                             thresh=0.05,
                         )
                     except Exception:
@@ -251,6 +258,204 @@ def plot_combined_hpdi(
     plt.close()
 
 
+def plot_prior_posterior_comparison(
+    posterior_samples,
+    prior,
+    output_dir,
+    param_names=None,
+    true_values=None,
+    n_prior_samples=5000,
+):
+    """
+    Plot comparison between prior and posterior distributions
+
+    Parameters
+    ----------
+    posterior_samples : np.ndarray
+        Posterior samples with shape (n_samples, n_dims)
+    prior : BasePrior
+        Prior distribution object
+    output_dir : Path
+        Output directory for saving plots
+    param_names : list, optional
+        Parameter names for labeling
+    true_values : list, optional
+        True parameter values to display
+    n_prior_samples : int
+        Number of samples to draw from prior
+    """
+
+    # Generate prior samples
+    prior_samples_torch = prior.sample(torch.Size([n_prior_samples]))
+    prior_samples = prior_samples_torch.cpu().numpy()
+
+    # Prepare samples list and names
+    samples_list = [prior_samples, posterior_samples]
+    dataset_names = ["Prior", "Posterior"]
+    colors = ["lightblue", "yellowgreen"]
+
+    # Default parameter names
+    if param_names is None:
+        n_dims = posterior_samples.shape[1]
+        param_names = [f"param_{i}" for i in range(n_dims)]
+        if n_dims == 3:
+            param_names = [r"$\Lambda$", r"$\lambda$", r"$\mu$"]
+
+    # Compute HPDI points
+    hpdi_points = []
+    hpdi_samples_list = []
+    for samples in samples_list:
+        hpdi_point, hpdi_samples = compute_hpdi_point(samples)
+        hpdi_points.append(hpdi_point)
+        hpdi_samples_list.append(hpdi_samples)
+
+    # Create figure
+    n_dims = posterior_samples.shape[1]
+    fig = plt.figure(figsize=(3 * n_dims, 3 * n_dims), dpi=100)
+    gs = fig.add_gridspec(n_dims, n_dims, wspace=0.3, hspace=0.3)
+
+    # Create axes
+    axes = np.empty((n_dims, n_dims), dtype=object)
+
+    # Global limits for each parameter
+    global_limits = []
+    for i in range(n_dims):
+        all_values = np.concatenate([samples[:, i] for samples in samples_list])
+        min_val = np.min(all_values)
+        max_val = np.max(all_values)
+        padding = (max_val - min_val) * 0.1
+        global_limits.append((min_val - padding, max_val + padding))
+
+    for i in range(n_dims):
+        for j in range(n_dims):
+            ax = fig.add_subplot(gs[i, j])
+            axes[i, j] = ax
+
+            ax.spines["right"].set_visible(False)
+            ax.spines["top"].set_visible(False)
+            ax.tick_params(axis="both", which="major", labelsize=9)
+
+            if i == j:  # Diagonal: marginal distributions
+                for k, (samples, name, color) in enumerate(
+                    zip(samples_list, dataset_names, colors)
+                ):
+                    # Plot distribution
+                    sns.kdeplot(
+                        samples[:, i],
+                        ax=ax,
+                        color=color,
+                        fill=True,
+                        alpha=0.4,
+                        linewidth=2,
+                        bw_adjust=BW,
+                        label=name if i == n_dims - 1 else None,
+                    )
+
+                    # Add HPDI line
+                    ax.axvline(
+                        hpdi_points[k][i],
+                        color=color,
+                        linestyle="-",
+                        linewidth=2,
+                        alpha=0.8,
+                    )
+
+                # Add true value if provided
+                if true_values is not None:
+                    ax.axvline(
+                        true_values[i],
+                        color="black",
+                        linestyle="--",
+                        linewidth=2,
+                        alpha=0.8,
+                        label="True value" if i == n_dims - 1 else None,
+                    )
+
+                # Configure axes
+                ax.set_xlabel(param_names[i], fontsize=12, fontweight="bold")
+                ax.set_xlim(global_limits[i])
+                ax.set_yticks([])
+                ax.set_ylabel("Density", fontsize=10)
+                ax.grid(axis="y", alpha=0.3, linestyle="--")
+
+            elif i < j:  # Upper triangle: scatter plots
+                for k, (samples, name, color) in enumerate(
+                    zip(samples_list, dataset_names, colors)
+                ):
+                    # Density contours
+                    try:
+                        sns.kdeplot(
+                            x=samples[:, j],
+                            y=samples[:, i],
+                            ax=ax,
+                            levels=3,
+                            color=color,
+                            alpha=0.5,
+                            fill=True,
+                            bw_adjust=BW,
+                            thresh=0.1,
+                        )
+                    except Exception:
+                        pass
+
+                    # HPDI samples scatter
+                    ax.scatter(
+                        hpdi_samples_list[k][:, j],
+                        hpdi_samples_list[k][:, i],
+                        color=color,
+                        alpha=0.3,
+                        s=3,
+                        edgecolor=None,
+                    )
+
+                    # HPDI point
+                    markers = ["o", "s"]
+                    ax.scatter(
+                        hpdi_points[k][j],
+                        hpdi_points[k][i],
+                        color=color,
+                        marker=markers[k],
+                        s=80,
+                        edgecolor="black",
+                        linewidth=1,
+                        zorder=100,
+                        label=name if i == 0 and j == 1 else None,
+                    )
+
+                # True value
+                if true_values is not None:
+                    ax.scatter(
+                        true_values[j],
+                        true_values[i],
+                        color="black",
+                        marker="*",
+                        s=120,
+                        edgecolor="white",
+                        linewidth=1.5,
+                        zorder=200,
+                        label="True value" if i == 0 and j == 1 else None,
+                    )
+
+                # Configure axes
+                ax.set_xlabel(param_names[j], fontsize=12, fontweight="bold")
+                ax.set_ylabel(param_names[i], fontsize=12, fontweight="bold")
+                ax.set_xlim(global_limits[j])
+                ax.set_ylim(global_limits[i])
+                ax.grid(alpha=0.2, linestyle="--")
+
+            else:  # Lower triangle: hide
+                ax.set_visible(False)
+
+    # Add legend
+    axes[n_dims - 1, n_dims - 1].legend(loc="upper right", fontsize=9, framealpha=0.9)
+
+    plt.suptitle("Prior vs Posterior Comparison", fontsize=16, fontweight="bold")
+    plt.savefig(
+        output_dir / "prior_posterior_comparison.png", dpi=300, bbox_inches="tight"
+    )
+    plt.close()
+
+
 def plot_marginal_posterior(samples, output_dir, hpdi_point=None, true_value=None):
     summary_stats = {
         "mean": np.mean(samples, axis=0),
@@ -267,7 +472,7 @@ def plot_marginal_posterior(samples, output_dir, hpdi_point=None, true_value=Non
     for i, ax in enumerate(axes):
         if i < samples.shape[1]:
             param_data = samples[:, i]
-            sns.kdeplot(param_data, ax=ax, fill=True)
+            sns.kdeplot(param_data, ax=ax, fill=True, bw_adjust=BW)
             ax.axvline(summary_stats["mean"][i], color="r", linestyle="-", label="Mean")
             ax.axvline(
                 summary_stats["50%"][i], color="g", linestyle="--", label="Median"
@@ -321,6 +526,7 @@ def plot_posterior_predictive_stats(
     ]
 
     colors = sns.color_palette("husl", 5)
+    bins = [30, 30, 30, 11, 16]
 
     for i, (name, color) in enumerate(zip(metric_names, colors)):
         if i < samples.shape[1]:
@@ -336,7 +542,7 @@ def plot_posterior_predictive_stats(
                 ax=axes[i],
                 color=color,
                 stat="count",
-                bins=30,
+                bins=bins[i],
                 kde=True,
             )
 

@@ -4,7 +4,7 @@ from ..utils.survival_rate import expected_number_witness
 from .constrained_uniform import ConstrainedUniform
 
 
-class ConstrainedUniform4DPrior(ConstrainedUniform):
+class HybridConstrainedUniform3DPrior(ConstrainedUniform):
     """
     Uniform prior on LDA, lda, gamma, mu, with the constraints :
         - lda + gamma > mu
@@ -24,29 +24,35 @@ class ConstrainedUniform4DPrior(ConstrainedUniform):
             high = torch.tensor(high, dtype=torch.float32)
 
         # Dimension du prior est 2: [lda, mu]
-        assert low.shape[-1] == 4 and high.shape[-1] == 4, (
-            "Parameters must be 4-dimensional."
+        assert low.shape[-1] == 3 and high.shape[-1] == 3, (
+            "Parameters must be 3-dimensional."
         )
 
-        self.dimension = 4
+        self.dimension = 3
 
         super().__init__(low, high, hyperparams, device)
 
     def _check_constraints(self, x):
-        # Constraint 1: lda + gamma > mu (indices 1, 2, 3)
-        constraint1 = x[..., 1] + x[..., 2] > x[..., 3]
+        # Constraint 1: lda > mu
+        # constraint1 = x[..., 1] > x[..., 2]
+        constraint1 = True
 
-        # Constraint 2: gamma < lda (indices 1, 2)
-        constraint2 = x[..., 2] < x[..., 1]
+        expected_size_spec = expected_number_witness(
+            x[..., 0],
+            x[..., 1],
+            0,
+            x[..., 2],
+            self.hyperparams["n_init"],
+            self.hyperparams["Nino"],
+        )
 
-        # Constraint 3: E[population of a tree at Nact] < max_pop
         constraint3 = (
             expected_number_witness(
-                x[..., 0],
+                0,
                 x[..., 1],
+                0,
                 x[..., 2],
-                x[..., 3],
-                self.hyperparams["n_init"],
+                expected_size_spec,
                 self.hyperparams["Nact"],
             )
             <= self.hyperparams["max_pop"]
@@ -55,15 +61,15 @@ class ConstrainedUniform4DPrior(ConstrainedUniform):
         # Constraint 4: E[population of a tree at Ninact] > 1
         constraint4 = (
             expected_number_witness(
-                x[..., 0],
+                0,
                 x[..., 1],
+                0,
                 x[..., 2],
-                x[..., 3],
-                self.hyperparams["n_init"],
+                expected_size_spec,
                 self.hyperparams["Nact"],
                 self.hyperparams["Ninact"],
             )
             >= 1
         )
 
-        return constraint1 & constraint2 & constraint3 & constraint4
+        return constraint1 & constraint3 & constraint4

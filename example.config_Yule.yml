@@ -35,7 +35,7 @@ inference:
   name: SBI # "SBI"
   config:
     method : NPE
-    num_simulations : 1000
+    num_simulations : 5000
     num_rounds : 1
     random_seed : 42
     num_samples : 500

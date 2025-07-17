@@ -1,6 +1,6 @@
 import torch
 
-from ..utils.stats import expected_yule_tree_size
+from ..utils.survival_rate import expected_number_witness
 from .constrained_uniform import ConstrainedUniform
 
 
@@ -36,7 +36,7 @@ class ConstrainedUniform2DPrior(ConstrainedUniform):
 
         # Constraint 2: E[population of a tree] < max_pop/n_init
         constraint2 = (
-            expected_yule_tree_size(
+            expected_number_witness(
                 0,
                 x[..., 0],
                 0,
@@ -49,7 +49,7 @@ class ConstrainedUniform2DPrior(ConstrainedUniform):
 
         # Constraint 3: E[population of a tree at Ninact] > 1
         constraint3 = (
-            expected_yule_tree_size(
+            expected_number_witness(
                 LDA=0,
                 lda=x[..., 0],
                 gamma=0,

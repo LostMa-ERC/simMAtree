@@ -6,6 +6,7 @@ from pydantic import BaseModel, Field
 class ModelImports(Enum):
     # Generators
     YULEABUNDANCE = ("src.generator.yule_abundance", "YuleAbundance")
+    YULEBDABUNDANCE = ("src.generator.hybrid_yuleBD_abundance", "YuleBDAbundance")
     BIRTHDEATHABUNDANCE = ("src.generator.birth_death_abundance", "BirthDeathAbundance")
     BIRTHDEATHABUNDANCESINGLETREE = (
         "src.generator.birth_death_abundance_single_tree",
@@ -32,6 +33,10 @@ class ModelImports(Enum):
     CONSTRAINEDUNIFORM4D = (
         "src.priors.constrained_uniform_4D",
         "ConstrainedUniform4DPrior",
+    )
+    HYBRIDCONSTRAINEDUNIFORM3D = (
+        "src.priors.hybrid_constrained_uniform_3D",
+        "HybridConstrainedUniform3DPrior",
     )
 
 

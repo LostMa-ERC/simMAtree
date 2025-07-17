@@ -2,12 +2,12 @@
 
 # Setup for the generator
 generator:
-  name: BirthDeathAbundance # "YuleAbundance" or "BirthDeathAbundance"
+  name: YuleAbundance # "YuleAbundance" or "BirthDeathAbundance"
   config:
     n_init: 1
     Nact: 1000
     Ninact: 1000
-    max_pop: 100000
+    max_pop: 2000000
 
 # Summary statistics that will be given as input to the inference
 stats: 
@@ -18,19 +18,15 @@ stats:
 # Prior distribution for the parameters
 prior:
   # TODO : Pouvoir faire en sorte que n'importe quel distribution déjà existante dans Pytorch puisse être renseigné ici
-  name: "ConstrainedUniform3D"
+  name: "ConstrainedUniform4D"
   config:
-    low: [0.0, 0.0, 0.0]
-    high: [1, 0.01, 0.01]
+    low: [0.0, 0.0, 0.0, 0.0]
+    high: [1.0, 0.03, 0.02, 0.02]
 
 # Set up for the inference backend
 inference:
   name: SBI # "SBI"
   config:
-    posterior_path: "posteriors/posterior.pkl"
+    posterior_path: "posteriors/yule/posterior.pkl"
+    num_samples : 500
 
-params:
-  LDA: 0.3
-  lda: 0.009
-  gamma: 0.001
-  mu: 0.0033

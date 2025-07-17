@@ -17,11 +17,16 @@ from torch.distributions import Distribution
 from src.generator import BaseGenerator
 from src.inference.base_backend import AbstractInferenceClass
 from src.stats import AbstractStatsClass
+from src.utils.survival_rate import (
+    plot_richness_posterior,
+    plot_survival_rates_posterior,
+)
 from src.utils.visualisation import (
     compute_hpdi_point,
     plot_combined_hpdi,
     plot_marginal_posterior,
     plot_posterior_predictive_stats,
+    plot_prior_posterior_comparison,
 )
 
 
@@ -56,6 +61,9 @@ class SbiBackend(AbstractInferenceClass):
         data: np.ndarray,
         prior: Distribution,
     ):
+        self.prior_for_plotting = prior
+        self.hyperparams = prior.hyperparams
+
         # Convert data to torch tensor
         x_o = torch.tensor(data, dtype=torch.float32).to(self.device)
 
@@ -210,6 +218,25 @@ class SbiBackend(AbstractInferenceClass):
         )
         plot_combined_hpdi([data["posterior_samples"]], output_dir=output_dir)
         plot_marginal_posterior(data["posterior_samples"], output_dir=output_dir)
+
+        if hasattr(self, "prior_for_plotting"):
+            plot_prior_posterior_comparison(
+                data["posterior_samples"],
+                self.prior_for_plotting,
+                output_dir=output_dir,
+            )
+
+        if hasattr(self, "hyperparams"):
+            plot_survival_rates_posterior(
+                data["posterior_samples"],
+                self.hyperparams,
+                output_dir=output_dir,
+            )
+            plot_richness_posterior(
+                data["posterior_samples"],
+                self.hyperparams,
+                output_dir=output_dir,
+            )
 
     def save_model(self, output_dir: Path):
         """
