@@ -15,6 +15,8 @@ authors:
   orcid: 0000-0001-9799-2410
 title: simMAtree
 version: v0.2
+license: "CC-BY-SA 4.0"
+type: software
 identifiers:
   - type: doi
     value: 10.5281/zenodo.15350477
