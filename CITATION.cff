@@ -1,22 +1,22 @@
-cff-version: 1.1.0
+cff-version: 1.2.0
 message: "If you use this software, please cite it as below."
 authors:
 - family-names: Moins
   given-names: Théo
-  orcid: 0009-0002-7191-5761
+  orcid: "https://orcid.org/0009-0002-7191-5761"
 - family-names: Christensen
   given-names: Kelly
-  orcid: 0000-0002-7236-874X
+  orcid: "https://orcid.org/0000-0002-7236-874X"
 - family-names: Camps
   given-names: Jean-Baptiste
-  orcid: 0000-0003-0385-7037
+  orcid: "https://orcid.org/0000-0003-0385-7037"
 - family-names: Godreau
   given-names: Ulysse
-  orcid: 0000-0001-9799-2410
+  orcid: "https://orcid.org/0000-0001-9799-2410"
 title: simMAtree
 version: v0.2
-license: "CC-BY-SA 4.0"
-type: software
+license: "CC-BY-SA-4.0"
+type: "software"
 identifiers:
   - type: doi
     value: 10.5281/zenodo.15350477
