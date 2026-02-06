@@ -62,7 +62,11 @@ class SbiBackend(AbstractInferenceClass):
         prior: Distribution,
     ):
         self.prior_for_plotting = prior
-        self.hyperparams = prior.hyperparams
+
+        if hasattr(prior, "hyperparams"):
+            self.hyperparams = prior.hyperparams
+        else:
+            self.hyperparams = None
 
         # Convert data to torch tensor
         x_o = torch.tensor(data, dtype=torch.float32).to(self.device)
@@ -226,7 +230,7 @@ class SbiBackend(AbstractInferenceClass):
                 output_dir=output_dir,
             )
 
-        if hasattr(self, "hyperparams"):
+        if hasattr(self, "hyperparams") and self.hyperparams is not None:
             plot_survival_rates_posterior(
                 data["posterior_samples"],
                 self.hyperparams,

@@ -13,6 +13,10 @@ class ModelImports(Enum):
         "BirthDeathAbundanceSingleTree",
     )
     BIRTHDEATHTREE = ("src.generator.birth_death_tree", "BirthDeathTree")
+    TWOSTATESBDGENERATOR = (
+        "src.generator.twostates_BD_generator",
+        "TwoStatesBDGenerator",
+    )
 
     # Backends
     SBI = ("src.inference.sbi_backend", "SbiBackend")
@@ -45,3 +49,4 @@ class ExperimentParamters(BaseModel):
     lda: float | None = Field(default=None)
     gamma: float | None = Field(default=None)
     mu: float | None = Field(default=None)
+    r: float | None = Field(default=None)

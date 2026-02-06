@@ -5,6 +5,7 @@ from yaml import safe_load
 from src.generator import BaseGenerator
 from src.inference import AbstractInferenceClass
 from src.priors import BasePrior
+from src.priors.pytorch_priors import PyTorchPrior
 from src.stats import AbstractStatsClass
 
 from .constants import ExperimentParamters, ModelImports
@@ -39,8 +40,16 @@ class Config(object):
                 )
 
         if "inference" in self.yaml:
-            prior_dimension = self.prior.dimension
-            # Check prior vs params consistency
+            prior = self.prior
+
+            # Get dimension differently for PyTorch vs custom distributions
+            if hasattr(prior, "dimension"):
+                # Custom distribution
+                prior_dimension = prior.dimension
+            else:
+                # PyTorch distribution
+                prior_dimension = PyTorchPrior.get_dimension(prior)
+
             if actual_param_count != 0 and prior_dimension != actual_param_count:
                 raise ValueError(
                     f"Parameter count mismatch: prior"
@@ -64,11 +73,18 @@ class Config(object):
 
     @property
     def prior(self) -> BasePrior:
-        name = self.yaml["prior"]["name"]
-        params = self.yaml["prior"]["config"] | {
-            "hyperparams": self.yaml["generator"]["config"]
-        }
-        return self.create_class(code_name=name, params=params)
+        prior_config = self.yaml["prior"]
+        name = prior_config["name"]
+        config = prior_config["config"]
+
+        # Check if it's a PyTorch distribution first
+        if PyTorchPrior.is_pytorch_distribution(name):
+            return PyTorchPrior.create_distribution(name, config)
+
+        # Fallback to existing custom distributions
+        else:
+            params = config | {"hyperparams": self.yaml["generator"]["config"]}
+            return self.create_class(code_name=name, params=params)
 
     @property
     def backend(self) -> AbstractInferenceClass | None:

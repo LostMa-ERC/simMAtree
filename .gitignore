@@ -180,6 +180,9 @@ cython_debug/
 .cursorignore
 .cursorindexingignore
 
+*.ipynb
+config/old/
+
 # Results files
 *results/
 *posteriors/
