@@ -1,0 +1,39 @@
+# Configuration for Unified Stemma Generator
+# 4-parameter model: temporal decay + decimation crisis
+
+generator:
+  name: UnifiedStemma      # Full model with decay and decimation
+  config:
+    n_init: 1              # Start with single archetype
+    Nact: 1000             # Active transmission phase duration
+    Ninact: 1000           # Inactive phase (pure death) duration
+    Ncrisis: 500           # Time when decimation crisis occurs
+    max_pop: 50000         # Maximum population to prevent explosion
+
+stats:
+  name: Stemma             # Stemma statistics
+  config: {}               # No additional configuration needed
+
+prior:
+  name: ConstrainedUniform4D  # 4-parameter uniform prior
+  config:
+    low: [0.004, 0.001, 0.0, 0.0]      # [lda, mu, decay, decim] lower bounds
+    high: [0.009, 0.005, 1.0, 1.0]     # [lda, mu, decay, decim] upper bounds
+
+# Ground truth parameters (optional, for validation/testing)
+params:
+  lda: 0.007    # Initial birth rate (manuscripts per manuscript per time unit)
+  mu: 0.003      # Death rate (manuscript destruction rate)
+  decay: 0.5     # Temporal decay factor (0=constant, 1=full decay)
+  decim: 0.2     # Decimation rate at crisis (fraction killed)
+
+inference:
+  name: SBI
+  config:
+    method: NLE              # Neural Likelihood Estimation
+    num_simulations: 1000   # More simulations for 4-parameter model
+    num_rounds: 1            # Number of sequential rounds
+    random_seed: 42          # Reproducibility seed
+    num_samples: 1000        # Posterior samples to draw
+    num_workers: 4           # Parallel workers for simulation
+    device: cpu              # cpu or cuda

@@ -13,6 +13,12 @@ class ModelImports(Enum):
         "BirthDeathAbundanceSingleTree",
     )
     BIRTHDEATHTREE = ("src.generator.birth_death_tree", "BirthDeathTree")
+    BIRTHDEATHSTEMMA = ("src.generator.birth_death_stemma", "BirthDeathStemmaGenerator")
+    UNIFIEDSTEMMA = ("src.generator.unified_stemma", "UnifiedStemmaGenerator")
+    GENERALIZEDSTEMMA = (
+        "src.generator.generalized_stemma",
+        "GeneralizedStemmaGenerator",
+    )
     TWOSTATESBDGENERATOR = (
         "src.generator.twostates_BD_generator",
         "TwoStatesBDGenerator",
@@ -24,6 +30,7 @@ class ModelImports(Enum):
     # Stats
     ABUNDANCE = ("src.stats.abundance_stats", "AbundanceStats")
     TOPOLOGY = ("src.stats.topology_stats", "TreeTopologyStats")
+    STEMMA = ("src.stats.stemma_stats", "StemmaStats")
 
     # Priors
     CONSTRAINEDUNIFORM2D = (
@@ -50,3 +57,5 @@ class ExperimentParamters(BaseModel):
     gamma: float | None = Field(default=None)
     mu: float | None = Field(default=None)
     r: float | None = Field(default=None)
+    decay: float | None = Field(default=None)  # For UnifiedStemmaGenerator
+    decim: float | None = Field(default=None)  # For UnifiedStemmaGenerator
