@@ -25,30 +25,20 @@ def inference(
     console.print(f"Data: {csv_file}")
     pop = generator.load_data(csv_file, csv_separator)
 
-    # Compute statistics
-    witness_stats = stats.compute_stats(pop)
-
-    # Print statistics for the user
-    stats.print_stats(pop)
-
     # Run inference
     console.rule("Running inference")
     console.print(type(generator).__name__, style="cyan")
     inference_data = backend.run_inference(
-        generator=generator, data=witness_stats, stats=stats, prior=prior
+        generator=generator, data=pop, stats=stats, prior=prior
     )
 
     # Save the inference data to results directory
     console.rule("Writing results")
     console.print("Output directory: ", dir.absolute())
-    observed_values = stats.get_rescaled_stats(pop)
 
-    backend.save_results(observed_values=observed_values, output_dir=dir)
-    backend.plot_results(
-        data=inference_data, observed_values=observed_values, output_dir=dir
-    )
+    backend.save_results(stats=stats, data=pop, output_dir=dir)
+    backend.plot_results(stats=stats, data=inference_data, pop=pop, output_dir=dir)
 
-    # Save the model if option is true
     if save_model:
         console.rule("Saving trained model")
         backend.save_model(output_dir=dir)

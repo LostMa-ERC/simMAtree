@@ -60,6 +60,51 @@ class GeneralizedStemmaGenerator(BaseGenerator):
         verbose: bool = False,
     ) -> List[nx.DiGraph]:
         """
+        Generate a stemma
+
+        Parameters
+        ----------
+        rng : np.random.Generator
+            Random number generator
+        params : Union[list, tuple, dict]
+            Model parameters
+        verbose : bool
+            Print debug information
+
+        Returns
+        -------
+        List[nx.DiGraph]
+            List of stemma trees with node attributes:
+            - 'state' : bool (True if manuscript survives)
+            - 'birth_time' : float (creation time)
+            - 'death_time' : float (destruction time, if applicable)
+        """
+        # Extract and validate parameters
+        model_params = self._extract_params(params)
+
+        if not self.validate_params(params):
+            raise ValueError(f"Invalid parameters for {self.__class__.__name__}")
+
+        complete_tree = self._generate_tree(rng, **model_params)
+
+        # Handle BREAK case (population explosion)
+        if complete_tree.graph.get("BREAK", False):
+            stemma = self._create_break_tree()
+        elif self._witness_nb(complete_tree) >= 1:
+            # Clean the tree to create stemma
+            stemma = self._generate_stemma(complete_tree)
+        else:
+            return nx.DiGraph()
+
+        return stemma
+
+    def generate_forest(
+        self,
+        rng: np.random.Generator,
+        params: Union[list, tuple, dict],
+        verbose: bool = False,
+    ) -> List[nx.DiGraph]:
+        """
         Generate a population of stemma trees
 
         Parameters
@@ -450,22 +495,19 @@ class GeneralizedStemmaGenerator(BaseGenerator):
         """
         df = pd.read_csv(csv_file, sep=csv_sep, engine="python")
 
-        # Group by text_ID to reconstruct trees
         trees = []
         for text_id in df["text_ID"].unique():
             text_df = df[df["text_ID"] == text_id]
             tree = nx.DiGraph()
 
-            # Add nodes
             for _, row in text_df.iterrows():
                 node_id = int(row["witness_ID"].split("-")[1])
                 tree.add_node(
                     node_id,
                     birth_time=row["birth_time"],
-                    state=True,  # Assume all loaded witnesses are alive
+                    state=row["state"] if "state" in row else True,
                 )
 
-                # Add edge if not root
                 if row["parent"] != "ROOT":
                     parent_id = int(row["parent"].split("-")[1])
                     tree.add_edge(parent_id, node_id)

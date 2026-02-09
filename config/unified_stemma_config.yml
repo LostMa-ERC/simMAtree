@@ -38,3 +38,4 @@ inference:
     num_samples: 1000        # Posterior samples to draw
     num_workers: 4           # Parallel workers for simulation
     device: cpu              # cpu or cuda
+    multiple_obs: true 

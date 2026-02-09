@@ -1,5 +1,6 @@
 import pickle
 from pathlib import Path
+from typing import List
 
 import numpy as np
 import pandas as pd
@@ -41,6 +42,7 @@ class SbiBackend(AbstractInferenceClass):
         num_samples: int = 10,
         num_workers: int = 1,
         posterior_path: str = None,
+        multiple_obs: bool = False,
     ):
         super().__init__(random_seed=random_seed)
         self.method = method
@@ -53,6 +55,7 @@ class SbiBackend(AbstractInferenceClass):
         self.results = None
         self.posterior_path = posterior_path
         self.trained_posterior = None
+        self.multiple_obs = multiple_obs
 
     def run_inference(
         self,
@@ -68,8 +71,16 @@ class SbiBackend(AbstractInferenceClass):
         else:
             self.hyperparams = None
 
-        # Convert data to torch tensor
-        x_o = torch.tensor(data, dtype=torch.float32).to(self.device)
+        if self.multiple_obs:
+            print(f"Running inference with {len(data)} independent observations")
+            observed_stats = np.array([stats.compute_stats(tree) for tree in data])
+
+        else:
+            observed_stats = stats.compute_stats(data)
+
+        observed_stats = torch.tensor(observed_stats, dtype=torch.float32).to(
+            self.device
+        )
 
         # Prior checking using SBI util function
         prior, _, _ = process_prior(prior)
@@ -83,7 +94,8 @@ class SbiBackend(AbstractInferenceClass):
                 result = stats.compute_stats(pop)
                 return torch.tensor(result, dtype=torch.float32)
             except ValueError:
-                return torch.zeros(13, dtype=torch.float32)
+                num_stats = stats.get_num_stats()
+                return torch.zeros(num_stats, dtype=torch.float32)
 
         # Process simulator for SBI
         simulator = process_simulator(sbi_simulator_wrapper, prior, False)
@@ -144,7 +156,7 @@ class SbiBackend(AbstractInferenceClass):
                     ).train(force_first_round_loss=True)
                 posterior = inference.build_posterior(
                     density_estimator, sample_with="mcmc"
-                ).set_default_x(x_o)
+                ).set_default_x(observed_stats[0])
                 posteriors.append(posterior)
 
                 accept_reject_fn = get_density_thresholder(
@@ -158,7 +170,7 @@ class SbiBackend(AbstractInferenceClass):
 
         # Get samples from the posterior
         num_samples = 1000
-        samples = posterior.sample((num_samples,), x=x_o)
+        samples = posterior.sample((num_samples,), x=observed_stats)
 
         # Create posterior predictive samples
         samples_np = samples.cpu().numpy()
@@ -177,7 +189,7 @@ class SbiBackend(AbstractInferenceClass):
         self.results = {
             "posterior_samples": samples_np,
             "posterior_predictive_stats": pp_samples_stats,
-            "observed_data": x_o.numpy(),
+            "observed_data": observed_stats.numpy(),
             "parameter_names": [f"param_{i}" for i in range(samples_np.shape[1])],
             "hpdi_point": hpdi_point,
             "hpdi_samples": hpdi_samples,
@@ -185,7 +197,48 @@ class SbiBackend(AbstractInferenceClass):
 
         return self.results
 
-    def save_results(self, observed_values: list, output_dir: Path):
+    def evaluate_likelihood_multiple_obs(
+        self, observations: List[np.ndarray], theta: np.ndarray
+    ) -> float:
+        """
+        Evaluate log likelihood for multiple independent observations
+
+        Parameters
+        ----------
+        observations : List[np.ndarray]
+            List of observed statistics [s₁, s₂, ..., sₙ]
+        theta : np.ndarray
+            Parameter values
+
+        Returns
+        -------
+        float
+            Sum of log likelihoods
+        """
+        if self.trained_posterior is None:
+            raise ValueError("Must train posterior first")
+
+        # Convert to tensors
+        theta_tensor = torch.tensor(theta, dtype=torch.float32).reshape(1, -1)
+
+        log_likelihood_sum = 0.0
+
+        for obs in observations:
+            obs_tensor = torch.tensor(obs, dtype=torch.float32)
+
+            log_prob = self.trained_posterior.potential_fn(theta_tensor, x=obs_tensor)
+            log_likelihood_sum += log_prob.item()
+
+        return log_likelihood_sum
+
+    def save_results(
+        self, stats: AbstractStatsClass, data: np.ndarray, output_dir: Path
+    ):
+        if self.multiple_obs:
+            observed_values = [stats.get_rescaled_stats(tree) for tree in data]
+        else:
+            observed_values = stats.get_rescaled_stats(data)
+
         if not hasattr(self, "results") or self.results is None:
             print("Inference needs to be done before saving the results")
             return
@@ -214,10 +267,15 @@ class SbiBackend(AbstractInferenceClass):
         summary_df = pd.DataFrame(summary_stats)
         summary_df.to_csv(output_dir.joinpath("posterior_summary.csv"))
 
-    def plot_results(self, data, observed_values, output_dir):
+    def plot_results(self, stats, data, pop, output_dir):
+        if self.multiple_obs:
+            observed_values = [stats.get_rescaled_stats(tree) for tree in pop]
+        else:
+            observed_values = stats.get_rescaled_stats(pop)
+
         plot_posterior_predictive_stats(
             data["posterior_predictive_stats"],
-            obs_value=observed_values,
+            obs_value=observed_values[0],
             output_dir=output_dir,
         )
         plot_combined_hpdi([data["posterior_samples"]], output_dir=output_dir)
