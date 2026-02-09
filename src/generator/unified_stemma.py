@@ -7,10 +7,12 @@ Inherits from GeneralizedStemmaGenerator and uses all parameters.
 
 from typing import Dict, Union
 
+import networkx as nx
 import numpy as np
 import torch
 
 from src.generator.generalized_stemma import GeneralizedStemmaGenerator
+from src.utils.stemma_utils import generate_stemma
 
 
 class UnifiedStemmaGenerator(GeneralizedStemmaGenerator):
@@ -136,3 +138,6 @@ class UnifiedStemmaGenerator(GeneralizedStemmaGenerator):
 
         except Exception:
             return False
+
+    def _generate_stemma(self, tree: nx.DiGraph) -> nx.DiGraph:
+        return generate_stemma(tree)

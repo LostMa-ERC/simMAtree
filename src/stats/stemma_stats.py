@@ -13,9 +13,16 @@ class StemmaStats(AbstractStatsClass):
     Summary statistics for individual stemma trees
     """
 
-    def __init__(self):
-        """Initialize stemma statistics calculator"""
-        pass
+    def __init__(self, additional_stats: bool = False):
+        """
+        Initialize stemma statistics calculator
+
+        Parameters
+        ----------
+        additional_stats : bool
+            If True, include temporal statistics (earliest, median, latest witness)
+        """
+        self.additional_stats = additional_stats
 
     def compute_stats(self, tree: Union[nx.DiGraph, str, None]) -> np.ndarray:
         """
@@ -30,44 +37,96 @@ class StemmaStats(AbstractStatsClass):
         Returns
         -------
         np.ndarray
-            Vector of 9 summary statistics, or array of -2 for invalid trees
+            Vector of summary statistics, or array of -2 for invalid trees
+            Length: 9 (basic) or 12 (with additional_stats)
         """
+        num_stats = 12 if self.additional_stats else 9
+
         # Handle special cases
         if tree is None or tree == "BREAK":
-            return np.full(9, -2.0)
+            return np.full(num_stats, -2.0)
 
-        # Count surviving witnesses
+        # Count surviving witnesses and get birth times
         n_living = sum(
             1 for node in tree.nodes() if tree.nodes[node].get("state", False)
         )
 
         # No survivors - invalid tree
         if n_living == 0:
-            return np.full(9, -2.0)
+            return np.full(num_stats, -2.0)
 
-        # Single witness - minimal stats
-        if n_living == 1:
-            return np.array([1.0, 0.0, -1.0, -1.0, -1.0, -1.0, -1.0, -1.0, -1.0])
+        # Get birth times for all witnesses
+        birth_times = [
+            tree.nodes[n]["birth_time"]
+            for n in tree.nodes()
+            if tree.nodes[n].get("state", False)
+        ]
 
-        # Two witnesses - include timespan
-        if n_living == 2:
-            birth_times = [
-                tree.nodes[n]["birth_time"]
-                for n in tree.nodes()
-                if tree.nodes[n].get("state", False)
-            ]
-            timelapse = int(max(birth_times) - min(birth_times))
-            return np.array(
-                [2.0, float(timelapse), -1.0, -1.0, -1.0, -1.0, -1.0, -1.0, -1.0]
-            )
+        timelapse = int(max(birth_times) - min(birth_times)) if birth_times else 0
+
+        # Compute temporal stats if enabled
+        if self.additional_stats:
+            earliest_wit = int(min(birth_times)) if birth_times else 0
+            median_wit = int(np.median(birth_times)) if birth_times else 0
+            latest_wit = int(max(birth_times)) if birth_times else 0
+
+            # Single witness - minimal stats with temporal info
+            if n_living == 1:
+                return np.array(
+                    [
+                        1.0,
+                        float(timelapse),
+                        float(earliest_wit),
+                        float(median_wit),
+                        float(latest_wit),
+                        -1.0,
+                        -1.0,
+                        -1.0,
+                        -1.0,
+                        -1.0,
+                        -1.0,
+                        -1.0,
+                    ]
+                )
+
+            # Two witnesses - include timespan and temporal info
+            if n_living == 2:
+                return np.array(
+                    [
+                        2.0,
+                        float(timelapse),
+                        float(earliest_wit),
+                        float(median_wit),
+                        float(latest_wit),
+                        -1.0,
+                        -1.0,
+                        -1.0,
+                        -1.0,
+                        -1.0,
+                        -1.0,
+                        -1.0,
+                    ]
+                )
+        else:
+            # Single witness - minimal stats
+            if n_living == 1:
+                return np.array([1.0, 0.0, -1.0, -1.0, -1.0, -1.0, -1.0, -1.0, -1.0])
+
+            # Two witnesses - include timespan
+            if n_living == 2:
+                return np.array(
+                    [2.0, float(timelapse), -1.0, -1.0, -1.0, -1.0, -1.0, -1.0, -1.0]
+                )
 
         # Three or more witnesses - full analysis
         if n_living >= 3:
-            return self._compute_full_stats(tree, n_living)
+            return self._compute_full_stats(tree, n_living, birth_times)
 
-        return np.full(9, -2.0)
+        return np.full(num_stats, -2.0)
 
-    def _compute_full_stats(self, tree: nx.DiGraph, n_living: int) -> np.ndarray:
+    def _compute_full_stats(
+        self, tree: nx.DiGraph, n_living: int, birth_times: list = None
+    ) -> np.ndarray:
         """
         Compute full topological statistics for trees with 3+ witnesses
 
@@ -77,21 +136,30 @@ class StemmaStats(AbstractStatsClass):
             Complete stemma tree
         n_living : int
             Number of surviving witnesses
+        birth_times : list, optional
+            Pre-computed birth times for witnesses (for efficiency)
 
         Returns
         -------
         np.ndarray
-            Full vector of 9 statistics
+            Full vector of statistics (9 basic or 12 with additional_stats)
         """
         # Generate clean stemma (remove dead leaves and non-branching dead nodes)
         stemma = generate_stemma(tree)
         archetype = root(stemma)
 
         # Initialize statistics
-        birth_times = []
         degrees = []
         direct_filiation_nb = 0
         arch_dists = []
+
+        # If birth_times not provided, compute them
+        if birth_times is None:
+            birth_times = [
+                stemma.nodes[n]["birth_time"]
+                for n in stemma.nodes()
+                if stemma.nodes[n].get("state", False)
+            ]
 
         # Analyze each node
         for node in stemma.nodes():
@@ -106,10 +174,6 @@ class StemmaStats(AbstractStatsClass):
                         father
                     ].get("state", False):
                         direct_filiation_nb += 1
-
-            # Collect birth times of witnesses
-            if stemma.nodes[node].get("state", False):
-                birth_times.append(stemma.nodes[node]["birth_time"])
 
             # Calculate distance from archetype
             try:
@@ -130,10 +194,24 @@ class StemmaStats(AbstractStatsClass):
         depth = max(arch_dists) if arch_dists else 0
         n_nodes = len(list(stemma.nodes()))
 
-        return np.array(
+        # Basic stats
+        basic_stats = [
+            float(n_living),
+            float(timelapse),
+        ]
+
+        # Add temporal stats if enabled
+        if self.additional_stats:
+            earliest_wit = int(min(birth_times)) if birth_times else 0
+            median_wit = int(np.median(birth_times)) if birth_times else 0
+            latest_wit = int(max(birth_times)) if birth_times else 0
+            basic_stats.extend(
+                [float(earliest_wit), float(median_wit), float(latest_wit)]
+            )
+
+        # Add topological stats
+        basic_stats.extend(
             [
-                float(n_living),
-                float(timelapse),
                 float(n_nodes),
                 float(direct_filiation_nb),
                 float(deg1),
@@ -144,6 +222,8 @@ class StemmaStats(AbstractStatsClass):
             ]
         )
 
+        return np.array(basic_stats)
+
     def get_stats_names(self) -> List[str]:
         """
         Get names of computed statistics
@@ -151,19 +231,35 @@ class StemmaStats(AbstractStatsClass):
         Returns
         -------
         List[str]
-            Names of the 9 statistics
+            Names of the statistics (9 or 12 depending on additional_stats)
         """
-        return [
+        basic_names = [
             "Number of living witnesses",
             "Timelapse (birth time span)",
-            "Number of nodes in stemma",
-            "Direct filiation count",
-            "Degree 1 count",
-            "Degree 2 count",
-            "Degree 3 count",
-            "Degree 4 count",
-            "Maximum depth from archetype",
         ]
+
+        if self.additional_stats:
+            basic_names.extend(
+                [
+                    "Earliest witness birth time",
+                    "Median witness birth time",
+                    "Latest witness birth time",
+                ]
+            )
+
+        basic_names.extend(
+            [
+                "Number of nodes in stemma",
+                "Direct filiation count",
+                "Degree 1 count",
+                "Degree 2 count",
+                "Degree 3 count",
+                "Degree 4 count",
+                "Maximum depth from archetype",
+            ]
+        )
+
+        return basic_names
 
     def rescaled_stats(self, stats: np.ndarray) -> np.ndarray:
         """

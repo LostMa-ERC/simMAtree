@@ -12,10 +12,11 @@ generator:
 
 stats:
   name: Stemma             # Stemma statistics
-  config: {}               # No additional configuration needed
+  config: 
+      additional_stats: true # enable temporal statistics (earliest, median, latest){} 
 
 prior:
-  name: ConstrainedUniform4D  # 4-parameter uniform prior
+  name: BoxUniform4D  # 4-parameter uniform prior
   config:
     low: [0.004, 0.001, 0.0, 0.0]      # [lda, mu, decay, decim] lower bounds
     high: [0.009, 0.005, 1.0, 1.0]     # [lda, mu, decay, decim] upper bounds

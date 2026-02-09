@@ -33,6 +33,10 @@ class ModelImports(Enum):
     STEMMA = ("src.stats.stemma_stats", "StemmaStats")
 
     # Priors
+    BOXUNIFORM4D = (
+        "src.priors.box_uniform_4D",
+        "BoxUniform4DPrior",
+    )
     CONSTRAINEDUNIFORM2D = (
         "src.priors.constrained_uniform_2D",
         "ConstrainedUniform2DPrior",
