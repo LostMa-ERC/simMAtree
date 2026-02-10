@@ -67,7 +67,7 @@ def plot_combined_hpdi(
     output_dir,
     dataset_names=None,
     true_values=None,
-    param_names=[r"$\Lambda$", r"$\lambda$", r"$\gamma$", r"$\mu$"],
+    param_names=[r"$p_1$", r"$p_2$", r"$p_3$", r"$p_4$"],
 ):
     n_datasets = len(samples_list)
 
@@ -297,7 +297,7 @@ def plot_prior_posterior_comparison(
     # Default parameter names
     if param_names is None:
         n_dims = posterior_samples.shape[1]
-        param_names = [f"param_{i}" for i in range(n_dims)]
+        param_names = [f"p_{i}" for i in range(n_dims)]
         if n_dims == 3:
             param_names = [r"$\Lambda$", r"$\lambda$", r"$\mu$"]
 

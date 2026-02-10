@@ -139,13 +139,18 @@ class SbiBackend(AbstractInferenceClass):
                 params, x = simulate_for_sbi(
                     simulator, proposal, num_simulations, num_workers=self.num_workers
                 )
-                zero_counter = torch.sum(torch.all(x == 0, dim=1)).item()
-                break_counter = torch.sum(torch.all(x == 1, dim=1)).item()
+                # zero_counter = torch.sum(torch.all(x == 0, dim=1)).item()
+                # break_counter = torch.sum(torch.all(x == 1, dim=1)).item()
+                # print(
+                #     f"\n{zero_counter} zero occurrences out of {num_simulations} simulations ({zero_counter / num_simulations * 100:.2f}%)"
+                # )
+                # print(
+                #     f"{break_counter} BREAK occurrences out of {num_simulations} simulations ({break_counter / num_simulations * 100:.2f}%)\n"
+                # )
+
+                invalid_counter = torch.sum(torch.all(x == -2, dim=1)).item()
                 print(
-                    f"\n{zero_counter} zero occurrences out of {num_simulations} simulations ({zero_counter / num_simulations * 100:.2f}%)"
-                )
-                print(
-                    f"{break_counter} BREAK occurrences out of {num_simulations} simulations ({break_counter / num_simulations * 100:.2f}%)\n"
+                    f"\n{invalid_counter} invalid occurrences out of {num_simulations} simulations ({invalid_counter / num_simulations * 100:.2f}%)"
                 )
 
                 if num_rounds == 1:
