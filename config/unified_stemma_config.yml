@@ -24,8 +24,8 @@ prior:
 # Ground truth parameters (optional, for validation/testing)
 params:
   lda: 0.007    # Initial birth rate (manuscripts per manuscript per time unit)
-  mu: 0.003      # Death rate (manuscript destruction rate)
-  decay: 0.5     # Temporal decay factor (0=constant, 1=full decay)
+  mu: 0.001     # Death rate (manuscript destruction rate)
+  decay: 0.4     # Temporal decay factor (0=constant, 1=full decay)
   decim: 0.2     # Decimation rate at crisis (fraction killed)
 
 inference:

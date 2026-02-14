@@ -22,7 +22,7 @@ from src.utils.survival_rate import (
     plot_richness_posterior,
     plot_survival_rates_posterior,
 )
-from src.utils.visualisation import (
+from src.utils.visualisation_stemma import (
     compute_hpdi_point,
     plot_combined_hpdi,
     plot_marginal_posterior,

@@ -51,9 +51,11 @@ class StemmaStats(AbstractStatsClass):
             1 for node in tree.nodes() if tree.nodes[node].get("state", False)
         )
 
-        # No survivors - invalid tree
+        # No survivors - valid case but no computable stats beyond count
         if n_living == 0:
-            return np.full(num_stats, -2.0)
+            result = np.full(num_stats, -1.0)
+            result[0] = 0.0  # Number of living witnesses = 0
+            return result
 
         # Get birth times for all witnesses
         birth_times = [
