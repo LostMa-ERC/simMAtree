@@ -161,7 +161,9 @@ class SbiBackend(AbstractInferenceClass):
                     ).train(force_first_round_loss=True)
                 posterior = inference.build_posterior(
                     density_estimator, sample_with="mcmc"
-                ).set_default_x(observed_stats[0])
+                ).set_default_x(
+                    observed_stats[0] if self.multiple_obs else observed_stats
+                )
                 posteriors.append(posterior)
 
                 accept_reject_fn = get_density_thresholder(
