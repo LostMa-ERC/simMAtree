@@ -282,7 +282,7 @@ class SbiBackend(AbstractInferenceClass):
 
         plot_posterior_predictive_stats(
             data["posterior_predictive_stats"],
-            obs_value=observed_values[0],
+            obs_value=observed_values[0] if self.multiple_obs else observed_values,
             output_dir=output_dir,
         )
         plot_combined_hpdi([data["posterior_samples"]], output_dir=output_dir)
